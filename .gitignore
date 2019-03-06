@@ -1,0 +1,11 @@
+/node_modules/
+/yarn-error.log
+/.yarnclean
+/work/
+/dist/
+/lib/
+/module/
+.npmrc
+/.vscode/
+/test-report.xml
+/.nyc_output
