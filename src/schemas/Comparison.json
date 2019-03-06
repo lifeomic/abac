@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Comparison",
+  "description": "An individual ABAC attribute comparison",
+  "type": "object",
+  "oneOf": [
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
+          "const": "superset"
+        },
+        "value": {
+          "type": "array",
+          "items" : {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["comparison", "value"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison" : {
+          "type": "string",
+          "enum": ["equals", "includes"]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": ["comparison", "value"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
+          "enum": ["equals", "includes", "superset"]
+        }, 
+        "target": {
+          "type": "string",
+          "pattern": "^[$a-zA-Z_][$0-9a-zA-Z_]*(\\.[$a-zA-Z_][$0-9a-zA-Z_]*)*$"
+        }
+      },
+      "required": ["comparison", "target"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
+          "const": "exists"
+        }
+      },
+      "required": ["comparison"],
+      "additionalProperties": false
+    }
+  ]
+}
