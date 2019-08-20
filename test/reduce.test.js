@@ -3,7 +3,7 @@
 import {reduce} from '../dist';
 import test from 'ava';
 
-test('RFC example should reduce properly', async t => {
+test('RFC example should reduce properly', t => {
   const policy = {
     rules: {
       accessAdmin: [
@@ -52,7 +52,7 @@ test('RFC example should reduce properly', async t => {
       readData: true
     }
   };
-  t.deepEqual(await reduce(policy, {user}), expected);
+  t.deepEqual(reduce(policy, {user}), expected);
 
   // members of both TNBC and Doctors gets readData for the TNBC dataset:
   user = {
@@ -73,28 +73,28 @@ test('RFC example should reduce properly', async t => {
       ]
     }
   };
-  t.deepEqual(await reduce(policy, {user}), expected);
+  t.deepEqual(reduce(policy, {user}), expected);
 
   // user in no groups gets no access:
   user = {groups: []};
   expected = {rules: {}};
-  t.deepEqual(await reduce(policy, {user}), expected);
+  t.deepEqual(reduce(policy, {user}), expected);
 
   // user just in TNBC group, but not doctor gets no access:
   user = {groups: ['8cfdd7b2-236e-4001-8d98-75d931877bbb']};
   expected = {rules: {}};
-  t.deepEqual(await reduce(policy, {user}), expected);
+  t.deepEqual(reduce(policy, {user}), expected);
 });
 
-test('A policy that has no access, gives everyone no access', async t => {
+test('A policy that has no access, gives everyone no access', t => {
   let user = {groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f']};
-  t.deepEqual(await reduce({rules: {}}, {user}), {rules: {}});
+  t.deepEqual(reduce({rules: {}}, {user}), {rules: {}});
 
   user = {groups: []};
-  t.deepEqual(await reduce({rules: {}}, {user}), {rules: {}});
+  t.deepEqual(reduce({rules: {}}, {user}), {rules: {}});
 });
 
-test('A policy with all access, gives everyone access', async t => {
+test('A policy with all access, gives everyone access', t => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -110,13 +110,13 @@ test('A policy with all access, gives everyone access', async t => {
   };
 
   let user = {groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f']};
-  t.deepEqual(await reduce(policy, {user}), policy);
+  t.deepEqual(reduce(policy, {user}), policy);
 
   user = {groups: []};
-  t.deepEqual(await reduce(policy, {user}), policy);
+  t.deepEqual(reduce(policy, {user}), policy);
 });
 
-test('supports target attributes', async t => {
+test('supports target attributes', t => {
   const policy = {
     rules: {
       readData: [
@@ -140,17 +140,17 @@ test('supports target attributes', async t => {
     }
   };
 
-  t.deepEqual(await reduce(policy, {user, resource: resource1}), expectedPolicy1);
+  t.deepEqual(reduce(policy, {user, resource: resource1}), expectedPolicy1);
 
   // Test that a user cannot read a different user's resource
   const resource2 = {ownerId: 'testuser2'};
   const expectedPolicy2 = {
     rules: { }
   };
-  t.deepEqual(await reduce(policy, {user, resource: resource2}), expectedPolicy2);
+  t.deepEqual(reduce(policy, {user, resource: resource2}), expectedPolicy2);
 });
 
-async function assertComparisonNotReduced (t, comparison, value = 'test') {
+function assertComparisonNotReduced (t, comparison, value = 'test') {
   const policy = {
     rules: {
       readData: [
@@ -170,11 +170,11 @@ async function assertComparisonNotReduced (t, comparison, value = 'test') {
       readData: policy.rules.readData
     }
   };
-  t.deepEqual(await reduce(policy, {user}), expected);
+  t.deepEqual(reduce(policy, {user}), expected);
 }
 
-test('rules with undefined comparison targets should not be reduced', async t => {
-  await assertComparisonNotReduced(t, 'equals');
-  await assertComparisonNotReduced(t, 'superset', ['test']);
-  await assertComparisonNotReduced(t, 'includes', ['test']);
+test('rules with undefined comparison targets should not be reduced', t => {
+  assertComparisonNotReduced(t, 'equals');
+  assertComparisonNotReduced(t, 'superset', ['test']);
+  assertComparisonNotReduced(t, 'includes', ['test']);
 });

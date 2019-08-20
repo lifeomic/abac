@@ -131,7 +131,7 @@ test('Empty rule list should not validate', t => {
   t.throws(() => validate(policy), Error);
 });
 
-test('Rejects policies containing both target and value keys', async t => {
+test('Rejects policies containing both target and value keys', t => {
   const policy = {
     rules: {
       readData: [
@@ -150,7 +150,7 @@ test('Rejects policies containing both target and value keys', async t => {
   t.throws(() => validate(policy), Error);
 });
 
-test('A policy with LIFE operations is allowed', async t => {
+test('A policy with LIFE operations is allowed', t => {
   const policy = {
     rules: {
       createLifeData: true,
@@ -163,7 +163,7 @@ test('A policy with LIFE operations is allowed', async t => {
   t.true(validate(policy));
 });
 
-test('A policy with a new operation is allowed', async t => {
+test('A policy with a new operation is allowed', t => {
   const policy = {
     rules: {
       someNewThing: true,
