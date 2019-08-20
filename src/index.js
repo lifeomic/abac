@@ -2,6 +2,7 @@
 
 import schemas from './schemas';
 import Ajv from 'ajv';
+import deprecate from 'util-deprecate';
 
 const ajv = new Ajv();
 
@@ -177,17 +178,6 @@ const reduceRules = (rules, attributes) => {
 };
 
 /**
- * Reduce a policy using the given attributes.
- * @param {object} policy - the policy to evaluate
- * @param {object} attributes - the attributes to use for the evaluation
- * @returns {object} the policy reduced to conditions involving attributes not not given
- * @throws {Error} if the policy is invalid
- */
-const reduce = async (policy, attributes) => {
-  return reduceSync(policy, attributes);
-};
-
-/**
  * Performs a synchronous reduction for whether the given policy might
  * allow the operations.  This function's intended use is for
  * client applications that need a simple check to disable
@@ -197,7 +187,7 @@ const reduce = async (policy, attributes) => {
  * @returns {object} the policy reduced to conditions involving attributes not not given
  * @throws {Error} if the policy is invalid
  */
-const reduceSync = (policy, attributes) => {
+const reduce = (policy, attributes) => {
   const result = {};
 
   validate(policy);
@@ -215,6 +205,12 @@ const reduceSync = (policy, attributes) => {
 };
 
 /**
+ * @deprecated use `reduce(...)` instead
+ */
+const reduceSync = deprecate(reduce,
+  '@lifeomic/abac reduceSync(...) is deprecated. Use reduce(...) instead.');
+
+/**
  * Check whether the given policy allows the operation with the given attributes.
  * @param {string} operation - the requested operation
  * @param {object} policy - the policy to use to check access
@@ -222,7 +218,7 @@ const reduceSync = (policy, attributes) => {
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
-const enforce = async (operation, policy, attributes) => {
+const enforce = (operation, policy, attributes) => {
   // Before using the policy, make sure it's valid
   validate(policy);
 
@@ -234,17 +230,21 @@ const enforce = async (operation, policy, attributes) => {
 };
 
 /**
- * Performs a synchronous check for whether the given policy might
+ * Performs a check for whether the given policy might
  * allow the operation.  This function's intended use is for
  * client applications that need a simple check to disable
- * or annotate UI elements.
+ * or annotate UI elements. If a rule has not been completely
+ * reduced for given operation then this function will assume
+ * `true` for the policy evaluation (not safe for server-side
+ * enforcement of ABAC policy!).
+ *
  * @param {string} operation - the requested operation
  * @param {object} policy - the policy to use to check access
  * @param {object} attributes - the attributes to use to check access
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
-const enforceSync = (operation, policy, attributes) => {
+const enforceLenient = (operation, policy, attributes) => {
   // Before using the policy, make sure it's valid
   validate(policy);
 
@@ -257,6 +257,12 @@ const enforceSync = (operation, policy, attributes) => {
 };
 
 /**
+ * @deprecated use `enforceLenient(...)` instead
+ */
+const enforceSync = deprecate(enforceLenient,
+  '@lifeomic/abac enforceSync(...) is deprecated. Use enforceLenient(...) instead.');
+
+/**
  * Check whether the given policy allows one of a list of operations
  * with the given attributes.
  * @param {string[]} operations - the requested operations
@@ -265,9 +271,9 @@ const enforceSync = (operation, policy, attributes) => {
  * @returns {boolean|string} - the first allowed operation or false
  * @throws {Error} Error if the policy is invalid
  */
-const enforceAny = async (operations, policy, attributes) => {
+const enforceAny = (operations, policy, attributes) => {
   for (const operation of operations) {
-    if (await enforce(operation, policy, attributes)) {
+    if (enforce(operation, policy, attributes)) {
       return operation;
     }
   }
@@ -283,8 +289,8 @@ const enforceAny = async (operations, policy, attributes) => {
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
-const privileges = async (policy, attributes) => {
-  const rules = (await reduce(policy, attributes)).rules;
+const privileges = (policy, attributes) => {
+  const rules = reduce(policy, attributes).rules;
   return Object
     .entries(rules)
     .filter(([, rules]) => rules === true)
@@ -295,26 +301,35 @@ const privileges = async (policy, attributes) => {
  * Synchronously return the list of privileges that the given policy
  * might allow against the given attributes. This function's intended use is for
  * client applications that need a simple check to disable
- * or annotate UI elements.
+ * or annotate UI elements. Not safe for server-side!
  * @param {object} policy - the policy to use to check access
  * @param {object} attributes - the attributes to use to check access
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
-const privilegesSync = (policy, attributes) => {
-  const rules = reduceSync(policy, attributes).rules;
+const privilegesLenient = (policy, attributes) => {
+  const rules = reduce(policy, attributes).rules;
   return Object
     .entries(rules)
     .map(([privilege]) => privilege);
 };
 
+/**
+ * @deprecated use `privilegesLenient(...)` instead
+ */
+const privilegesSync = deprecate(privilegesLenient,
+  '@lifeomic/abac privilegesSync(...) is deprecated. Use privilegesLenient(...) instead.');
+
 export {
   validate,
   merge,
   reduce,
+  reduceSync /* deprecated */,
   enforce,
-  enforceSync,
+  enforceLenient,
+  enforceSync /* deprecated */,
   enforceAny,
-  privilegesSync,
-  privileges
+  privileges,
+  privilegesLenient,
+  privilegesSync /* deprecated */
 };

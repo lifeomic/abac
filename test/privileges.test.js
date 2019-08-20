@@ -1,9 +1,9 @@
 'use strict';
 
-import {privileges, privilegesSync} from '../dist';
+import {privileges, privilegesLenient} from '../dist';
 import test from 'ava';
 
-test('async privileges should work', async t => {
+test('privileges should work', t => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -27,19 +27,19 @@ test('async privileges should work', async t => {
     }
   };
 
-  t.deepEqual(await privileges(policy), ['accessAdmin', 'readData']);
+  t.deepEqual(privileges(policy), ['accessAdmin', 'readData']);
   t.deepEqual(
-    await privileges(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
+    privileges(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
     ['accessAdmin', 'readData']);
   t.deepEqual(
-    await privileges(policy, {resource: {dataset: 'project'}}),
+    privileges(policy, {resource: {dataset: 'project'}}),
     ['accessAdmin', 'readData', 'deleteData']);
   t.deepEqual(
-    await privileges(policy, {resource: {dataset: 'project2'}}),
+    privileges(policy, {resource: {dataset: 'project2'}}),
     ['accessAdmin', 'readData']);
 });
 
-test('sync privileges should work', async t => {
+test('privilegesLenient should work', t => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -63,21 +63,21 @@ test('sync privileges should work', async t => {
     }
   };
 
-  // privilagesSync does the best it can given incomplete information
+  // privilegesLenient does the best it can given incomplete information
   // and is permissive:
-  t.deepEqual(privilegesSync(policy), ['accessAdmin', 'readData', 'deleteData', 'updateData']);
+  t.deepEqual(privilegesLenient(policy), ['accessAdmin', 'readData', 'deleteData', 'updateData']);
   t.deepEqual(
-    privilegesSync(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
+    privilegesLenient(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
     ['accessAdmin', 'readData', 'deleteData']);
   t.deepEqual(
-    privilegesSync(policy, {resource: {dataset: 'project'}}),
+    privilegesLenient(policy, {resource: {dataset: 'project'}}),
     ['accessAdmin', 'readData', 'deleteData', 'updateData']);
 
-  // given full information, privilegesSync gives correct answers:
+  // given full information, privilegesLenient gives correct answers:
   t.deepEqual(
-    privilegesSync(policy, {resource: {dataset: 'project', ownerId: 'john'}, user: {id: 'john'}}),
+    privilegesLenient(policy, {resource: {dataset: 'project', ownerId: 'john'}, user: {id: 'john'}}),
     ['accessAdmin', 'readData', 'deleteData', 'updateData']);
   t.deepEqual(
-    privilegesSync(policy, {resource: {dataset: 'project2', ownerId: 'john'}, user: {id: 'jane'}}),
+    privilegesLenient(policy, {resource: {dataset: 'project2', ownerId: 'john'}, user: {id: 'jane'}}),
     ['accessAdmin', 'readData']);
 });
