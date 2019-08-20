@@ -16,7 +16,7 @@ yarn install @lifeomic/abac
 **TypeScript usage:**
 
 ```typescript
-import abac from '@lifeomic/abac';
+import * as abac from '@lifeomic/abac';
 
 abac.validate(policy);
 abac.merge(policies);
