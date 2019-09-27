@@ -26,6 +26,7 @@ abac.enforceLenient(operationName, policy, attributes);
 abac.enforceAny(operationName, policy, attributes);
 abac.privileges(policy, attributes);
 abac.privilegesLenient(policy, attributes);
+abac.policyRequiresAttribute(policy, attribute);
 ```
 
 See unit tests in `/test` folder - many good examples.

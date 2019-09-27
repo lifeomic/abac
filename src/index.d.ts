@@ -112,3 +112,14 @@ export type AbacRuleComparison = (
    * @throws {Error} Error if the policy is invalid
    */
   export function privileges(policy: AbacReducedPolicy, attributes: object): string[];
+
+  /**
+   * Synchronously determines if a given attribute path is in the list of rules
+   * for a given policy. This may be useful for determining if additional metadata
+   * should be fetched before enforcing a policy.
+   *
+   * @param {object} policy - the policy to check
+   * @param {string} attribute - the attribute path, e.g. 'user.patients'
+   * @returns {boolean} True if the attribute is in the rules list
+   */
+  export function policyRequiresAttribute(policy: AbacReducedPolicy, attribute: string): boolean;
