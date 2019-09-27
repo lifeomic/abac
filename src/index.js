@@ -327,7 +327,7 @@ const privilegesSync = deprecate(privilegesLenient,
  *
  * @param {object} policy - the policy to check
  * @param {string} attribute - the attribute path, e.g. 'user.patients'
- * @returns {Boolean} True if the attribute is in the rules list
+ * @returns {boolean} True if the attribute is in the rules list
  */
 const policyRequiresAttribute = (policy, attribute) => {
   const rules = Object.values(policy.rules)
