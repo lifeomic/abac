@@ -320,6 +320,22 @@ const privilegesLenient = (policy, attributes) => {
 const privilegesSync = deprecate(privilegesLenient,
   '@lifeomic/abac privilegesSync(...) is deprecated. Use privilegesLenient(...) instead.');
 
+/**
+ * Synchronously determines if a given attribute path is in the list of rules
+ * for a given policy. This may be useful for determining if additional metadata
+ * should be fetched before enforcing a policy.
+ *
+ * @param {object} policy - the policy to check
+ * @param {string} attribute - the attribute path, e.g. 'user.patients'
+ * @returns {Boolean} True if the attribute is in the rules list
+ */
+const policyRequiresAttribute = (policy, attribute) => {
+  const rules = Object.values(policy.rules)
+    .filter(rule => Array.isArray(rule))
+    .reduce((left, right) => left.concat(right), []);
+  return rules.some(rule => rule.hasOwnProperty(attribute));
+};
+
 export {
   validate,
   merge,
@@ -331,5 +347,6 @@ export {
   enforceAny,
   privileges,
   privilegesLenient,
-  privilegesSync /* deprecated */
+  privilegesSync /* deprecated */,
+  policyRequiresAttribute
 };
