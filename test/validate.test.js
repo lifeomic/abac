@@ -173,3 +173,37 @@ test('A policy with a new operation is allowed', t => {
 
   t.true(validate(policy));
 });
+
+test('Allows policies containing unknown comparisons and target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            target: 'user.favoriteDrink'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});
+
+test('Allows policies containing unknown comparisons and value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            value: 'tea'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});

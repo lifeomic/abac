@@ -7,8 +7,7 @@
     {
       "properties": {
         "comparison": {
-          "type": "string",
-          "const": "superset"
+          "type": "string"
         },
         "value": {
           "type": "array",
@@ -23,8 +22,7 @@
     {
       "properties": {
         "comparison" : {
-          "type": "string",
-          "enum": ["equals", "includes"]
+          "type": "string"
         },
         "value": {
           "type": "string"
@@ -36,9 +34,8 @@
     {
       "properties": {
         "comparison": {
-          "type": "string",
-          "enum": ["equals", "includes", "superset"]
-        }, 
+          "type": "string"
+        },
         "target": {
           "type": "string",
           "pattern": "^[$a-zA-Z_][$0-9a-zA-Z_]*(\\.[$a-zA-Z_][$0-9a-zA-Z_]*)*$"
