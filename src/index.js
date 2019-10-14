@@ -108,6 +108,10 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       return Array.isArray(value) && value.includes(compareValue);
 
+    case 'in':
+      if (compareValue === undefined) return undefined;
+      return Array.isArray(compareValue) && compareValue.includes(value);
+
     case 'equals':
       if (compareValue === undefined) return undefined;
       return value === compareValue;
@@ -119,11 +123,9 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       return Array.isArray(value) && compareValue.every(x => value.includes(x));
 
-    // It is ok to ignore this line because the policy should be validated
-    // before this method executes making this execution impossible
-    /* istanbul ignore next */
     default:
-      throw new Error(`unknown comparison type: ${condition.comparison}`);
+      // for unknown comparison types simply deny access:
+      return false;
   }
 };
 

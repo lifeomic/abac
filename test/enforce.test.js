@@ -181,6 +181,112 @@ test('returns false for invalid operation names', t => {
   t.false(enforce('not-an-operation', {rules: {}}, {}));
 });
 
+test('returns false for permissions containing unknown comparisons and target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            target: 'user.favoriteDrink'
+          }
+        }
+      ],
+      createData: true
+    }
+  };
+
+  t.false(enforce('readData', policy, {user: {favoriteDrink: 'tea'}, resource: {type: 'sort of tea'}}));
+  t.true(enforce('createData', policy, {user: {favoriteDrink: 'tea'}, resource: {type: 'sort of tea'}}));
+});
+
+test('returns false for permissions containing unknown comparisons and value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            value: 'tea'
+          }
+        }
+      ],
+      createData: true
+    }
+  };
+
+  t.false(enforce('readData', policy, {resource: {type: 'sort of tea'}}));
+  t.true(enforce('createData', policy, {resource: {type: 'sort of tea'}}));
+});
+
+test('supports the in comparison with target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'in',
+            target: 'user.favoriteDrinks'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {user: {favoriteDrinks: ['tea', 'coffee']}, resource: {type: 'tea'}}));
+});
+
+test('supports the in comparison with target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'in',
+            target: 'user.favoriteDrinks'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {resource: {type: 'tea'}}));
+});
+
+test('supports the in comparison with value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'in',
+            value: ['tea', 'coffee']
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {resource: {type: 'tea'}}));
+});
+
+test('supports the in comparison with value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'in',
+            value: ['tea', 'coffee']
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {resource: {type: 'chai'}}));
+});
+
 test('A policy with a new operation works as expected', t => {
   const policy = {
     rules: {

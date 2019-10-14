@@ -121,6 +121,23 @@ test('Missing comparison field should not validate', t => {
   t.throws(() => validate(policy), Error);
 });
 
+test('Wrong value type should not validate', t => {
+  const policy = {
+    rules: {
+      accessAdmin: [
+        {
+          'user.groups': {
+            comparison: 'includes',
+            value: ['A', 'B']
+          }
+        }
+      ]
+    }
+  };
+
+  t.throws(() => validate(policy), Error);
+});
+
 test('Empty rule list should not validate', t => {
   const policy = {
     rules: {
@@ -168,6 +185,57 @@ test('A policy with a new operation is allowed', t => {
     rules: {
       someNewThing: true,
       readData: true
+    }
+  };
+
+  t.true(validate(policy));
+});
+
+test('Allows policies containing unknown comparisons and target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            target: 'user.favoriteDrink'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});
+
+test('Allows policies containing unknown comparisons and value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            value: 'tea'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});
+
+test('Allows policies containing unknown comparisons and arbitrary other fields', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.type': {
+            comparison: 'not-entirely-unlike',
+            flavor: 'tea'
+          }
+        }
+      ]
     }
   };
 
