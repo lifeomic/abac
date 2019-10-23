@@ -333,3 +333,39 @@ test('enforceAny returns false when none of the operations are allowed', t => {
 
   t.false(enforceAny(['readData', 'readAnonData'], policy, {}));
 });
+
+test('rules can reference vaules in an array', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'array.0.value': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {array: [{value: 'test'}]}));
+  t.false(enforce('readData', policy, {array: [{value: 'bogus'}]}));
+});
+
+test('rules can target array values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          value: {
+            comparison: 'equals',
+            target: 'array.0.value'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {value: 'test', array: [{value: 'test'}]}));
+  t.false(enforce('readData', policy, {value: 'test', array: [{value: 'bogus'}]}));
+});
