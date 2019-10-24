@@ -369,3 +369,118 @@ test('rules can target array values', t => {
   t.true(enforce('readData', policy, {value: 'test', array: [{value: 'test'}]}));
   t.false(enforce('readData', policy, {value: 'test', array: [{value: 'bogus'}]}));
 });
+
+test('rules can end with a wildcard', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.*': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: {a: 'test', b: 'test'}}));
+  t.false(enforce('readData', policy, {some: {a: 'test', b: 'bogus'}}));
+  t.true(enforce('readData', policy, {some: ['test', 'test']}));
+  t.false(enforce('readData', policy, {some: ['test', 'bogus']}));
+});
+
+test('rules can start with a wildcard', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          '*.some': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {a: {some: 'test'}, b: {some: 'test'}}));
+  t.false(enforce('readData', policy, {a: {some: 'bogus'}, b: {some: 'test'}}));
+  t.true(enforce('readData', policy, [{some: 'test'}, {some: 'test'}]));
+  t.false(enforce('readData', policy, [{some: 'test'}, {some: 'bogus'}]));
+});
+
+test('rules can contain a wildcard', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.*.property': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: {a: {property: 'test'}, b: {property: 'test'}}}));
+  t.false(enforce('readData', policy, {some: {a: {property: 'test'}, b: {property: 'bogus'}}}));
+  t.true(enforce('readData', policy, {some: [{property: 'test'}, {property: 'test'}]}));
+  t.false(enforce('readData', policy, {some: [{property: 'test'}, {property: 'bogus'}]}));
+});
+
+test('wildcard evaluation fails if attribute resolution fails', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.*.property': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {}));
+  t.false(enforce('readData', policy, {some: {property: 'test'}}));
+  t.false(enforce('readData', policy, {some: [{property: 'test'}, {bogus: 'test'}]}));
+});
+
+test('wildcard evaluation fails if target resolution fails', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.*.property': {
+            comparison: 'equals',
+            target: 'missing'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {some: [{property: 'test'}, {property: 'test'}]}));
+});
+
+test('rules can contain multiple wildcards', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.*.property.*': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: [{property: ['test', 'test']}, {property: ['test', 'test']}]}));
+  t.false(enforce('readData', policy, {some: [{property: ['test', 'bogus']}, {property: ['test', 'test']}]}));
+  t.false(enforce('readData', policy, {some: [{property: ['test', 'test']}, {bogus: ['test', 'test']}]}));
+});
