@@ -73,7 +73,7 @@ const merge = (policies) => {
  * @param {array} path - array of path segments
  */
 const getAttributeValues = (attributes, path) => {
-  if (!attributes) {
+  if (attributes === undefined) {
     return [];
   }
 

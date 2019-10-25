@@ -484,3 +484,21 @@ test('rules can contain multiple wildcards', t => {
   t.false(enforce('readData', policy, {some: [{property: ['test', 'bogus']}, {property: ['test', 'test']}]}));
   t.false(enforce('readData', policy, {some: [{property: ['test', 'test']}, {bogus: ['test', 'test']}]}));
 });
+
+test('rules can use numeric comparison values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.value': {
+            comparison: 'equals',
+            value: 0
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: {value: 0}}));
+  t.false(enforce('readData', policy, {some: {value: 1}}));
+});
