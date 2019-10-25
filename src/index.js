@@ -73,7 +73,7 @@ const merge = (policies) => {
  * @param {array} path - array of path segments
  */
 const getAttributeValues = (attributes, path) => {
-  if (!attributes) {
+  if (attributes === undefined) {
     return [];
   }
 
@@ -83,25 +83,29 @@ const getAttributeValues = (attributes, path) => {
 
   const name = path[0];
 
-  if (name === '*') {
-    const keys = Object.keys(attributes);
-    let values = [];
+  switch (name) {
+    case '*':
+      const keys = Object.keys(attributes);
+      let values = [];
 
-    for (const key of keys) {
-      const result = getAttributeValues(attributes[key], path.slice(1));
+      for (const key of keys) {
+        const result = getAttributeValues(attributes[key], path.slice(1));
 
-      // If a single sub-path fails to evaluate fail the entire traversal.
-      if (result.length === 0) {
-        values = [];
-        break;
-      } else {
-        values = values.concat(result);
+        // If a single sub-path fails to evaluate fail the entire traversal.
+        if (result.length === 0) {
+          values = [];
+          break;
+        } else {
+          values = values.concat(result);
+        }
       }
-    }
 
-    return values;
-  } else {
-    return getAttributeValues(attributes[name], path.slice(1));
+      return values;
+    case '%keys':
+      return getAttributeValues(Object.keys(attributes), path.slice(1));
+    default:
+      const unescapedName = name.replace(/^%%/, '%');
+      return getAttributeValues(attributes[unescapedName], path.slice(1));
   }
 };
 

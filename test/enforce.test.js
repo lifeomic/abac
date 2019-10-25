@@ -484,3 +484,103 @@ test('rules can contain multiple wildcards', t => {
   t.false(enforce('readData', policy, {some: [{property: ['test', 'bogus']}, {property: ['test', 'test']}]}));
   t.false(enforce('readData', policy, {some: [{property: ['test', 'test']}, {bogus: ['test', 'test']}]}));
 });
+
+test('rules can use numeric comparison values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.value': {
+            comparison: 'equals',
+            value: 0
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: {value: 0}}));
+  t.false(enforce('readData', policy, {some: {value: 1}}));
+});
+
+test('rules can match object keys', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'some.object.%keys.*': {
+            comparison: 'in',
+            value: ['a', 'b', 'c']
+          },
+          'some.object.%keys.length': {
+            comparison: 'equals',
+            value: 2
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {some: {object: {a: 1, b: 2}}}));
+  t.false(enforce('readData', policy, {some: {object: {a: 1, d: 2}}}));
+  t.false(enforce('readData', policy, {some: {object: {a: 1, b: 2, c: 3}}}));
+});
+
+test('rules can match top-level object keys', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          '%keys.*': {
+            comparison: 'in',
+            value: ['a', 'b', 'c']
+          },
+          '%keys.length': {
+            comparison: 'equals',
+            value: 2
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {a: 1, b: 2}));
+  t.false(enforce('readData', policy, {a: 1, d: 2}));
+  t.false(enforce('readData', policy, {a: 1, b: 2, c: 3}));
+});
+
+test('rules can match literal %keys attribute', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.%%keys': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {'%keys': 'test'}}));
+  t.false(enforce('readData', policy, {object: {'%keys': 'bogus'}}));
+});
+
+test('rules can match top-level literal %keys attribute', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          '%%keys': {
+            comparison: 'equals',
+            value: 'test'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {'%keys': 'test'}));
+  t.false(enforce('readData', policy, {'%keys': 'bogus'}));
+});
