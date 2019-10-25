@@ -68,24 +68,51 @@ const merge = (policies) => {
 };
 
 /**
+ * Get a list of all values matching the path (including wildcards).
+ * @param {object} attributes - attributes as nested objects
+ * @param {array} path - array of path segments
+ */
+const getAttributeValues = (attributes, path) => {
+  if (!attributes) {
+    return [];
+  }
+
+  if (path.length === 0) {
+    return [attributes];
+  }
+
+  const name = path[0];
+
+  if (name === '*') {
+    const keys = Object.keys(attributes);
+    let values = [];
+
+    for (const key of keys) {
+      const result = getAttributeValues(attributes[key], path.slice(1));
+
+      // If a single sub-path fails to evaluate fail the entire traversal.
+      if (result.length === 0) {
+        values = [];
+        break;
+      } else {
+        values = values.concat(result);
+      }
+    }
+
+    return values;
+  } else {
+    return getAttributeValues(attributes[name], path.slice(1));
+  }
+};
+
+/**
  * Get the attribute value identified by path.
  * @param {object} attributes - attributes as nested objects
  * @param {string} path - string path (e.g. 'user.groups')
  */
 const getAttribute = (attributes, name) => {
   const path = name.split('.');
-  for (const field of path) {
-    if (attributes) {
-      // It is safe to ignore the injection attach here because the attribute
-      // name has been validated by the policy schema before getting this far
-      // eslint-disable-next-line security/detect-object-injection
-      attributes = attributes[field];
-    } else {
-      return undefined;
-    }
-  }
-
-  return attributes;
+  return getAttributeValues(attributes, path)[0];
 };
 
 const getCompareValue = function (condition, attributes) {
@@ -131,23 +158,22 @@ const compare = (condition, value, attributes) => {
 
 const reduceRule = (rule, attributes) => {
   const result = {};
+
   for (const [name, condition] of Object.entries(rule)) {
-    const value = getAttribute(attributes, name);
-    if (value === undefined) {
-      // It is safe to ignore the injection attach here because the attribute
-      // name has been validated by the policy schema before getting this far
-      // eslint-disable-next-line security/detect-object-injection
+    const values = getAttributeValues(attributes, name.split('.'));
+
+    if (values.length === 0) {
       result[name] = condition;
     } else {
-      const compareResult = compare(condition, value, attributes);
-      if (compareResult === undefined) {
-        // It is safe to ignore the injection attach here because the attribute
-        // name has been validated by the policy schema before getting this far
-        // eslint-disable-next-line security/detect-object-injection
-        result[name] = condition;
-      } else {
-        if (compareResult === false) {
-          return false;
+      for (const value of values) {
+        const compareResult = compare(condition, value, attributes);
+        if (compareResult === undefined) {
+          result[name] = condition;
+          break;
+        } else {
+          if (compareResult === false) {
+            return false;
+          }
         }
       }
     }
