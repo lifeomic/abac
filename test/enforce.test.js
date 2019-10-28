@@ -177,6 +177,29 @@ test('supports target attributes', t => {
   t.false(enforce('readData', policy, {user, resource: resource2}));
 });
 
+test('returns false when target attributes are missing', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'user.patients': {
+            comparison: 'includes',
+            target: 'resource.subject'
+          }
+        }
+      ]
+    }
+  };
+
+  const user1 = { patients: ['patient1'] };
+  const resource1 = {};
+  t.false(enforce('readData', policy, {user: user1, resource: resource1}));
+
+  const user2 = {};
+  const resource2 = { subject: 'patient2' };
+  t.false(enforce('readData', policy, {user: user2, resource: resource2}));
+});
+
 test('returns false for invalid operation names', t => {
   t.false(enforce('not-an-operation', {rules: {}}, {}));
 });
