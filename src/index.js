@@ -251,8 +251,12 @@ const reduceSync = deprecate(reduce,
  * @throws {Error} Error if the policy is invalid
  */
 const enforce = (operation, policy, attributes) => {
-  // Before using the policy, make sure it's valid
-  validate(policy);
+  try {
+    // Before using the policy, make sure it's valid
+    validate(policy);
+  } catch (error) {
+    return false;
+  }
 
   // It is safe to ignore the injection attach here because the operation name has been validated
   // against the allowed operation names
@@ -277,8 +281,12 @@ const enforce = (operation, policy, attributes) => {
  * @throws {Error} Error if the policy is invalid
  */
 const enforceLenient = (operation, policy, attributes) => {
-  // Before using the policy, make sure it's valid
-  validate(policy);
+  try {
+    // Before using the policy, make sure it's valid
+    validate(policy);
+  } catch (error) {
+    return false;
+  }
 
   // It is safe to ignore the injection attach here because the operation name has been validated
   // against the allowed operation names

@@ -607,3 +607,18 @@ test('rules can match top-level literal %keys attribute', t => {
   t.true(enforce('readData', policy, {'%keys': 'test'}));
   t.false(enforce('readData', policy, {'%keys': 'bogus'}));
 });
+
+test('returns false for invalid policy', t => {
+  const policy = {
+    rules: {
+      readData: {
+        '?!*bogus*!?': {
+          comparison: 'equals',
+          value: 'test'
+        }
+      }
+    }
+  };
+
+  t.false(enforce('readData', policy, {}));
+});
