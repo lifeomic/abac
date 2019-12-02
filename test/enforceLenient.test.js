@@ -49,3 +49,18 @@ test('Partially evaluated policy should enforce properly', t => {
 test('returns false for invalid operation names', t => {
   t.false(enforceLenient('not-an-operation', {rules: {}}));
 });
+
+test('returns false for invalid policy', t => {
+  const policy = {
+    rules: {
+      readData: {
+        '?!*bogus*!?': {
+          comparison: 'equals',
+          value: 'test'
+        }
+      }
+    }
+  };
+
+  t.false(enforceLenient('readData', policy, {}));
+});
