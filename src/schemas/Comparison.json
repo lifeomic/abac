@@ -8,12 +8,12 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["superset", "in"]
+          "enum": ["superset", "in", "notIn"]
         },
         "value": {
           "type": "array",
           "items" : {
-            "type": "string"
+            "type": ["number", "string"]
           }
         }
       },
@@ -24,7 +24,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["includes", "equals"]
+          "enum": ["includes", "equals", "notEquals"]
         },
         "value": {
           "type": ["number", "string"]
@@ -37,7 +37,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["superset", "in", "equals", "includes"]
+          "enum": ["superset", "in", "equals", "includes", "notEquals", "notIn"]
         },
         "target": {
           "type": "string",
@@ -51,7 +51,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "not": {"enum": ["superset", "in", "equals", "includes"]}
+          "not": {"enum": ["superset", "in", "equals", "includes", "notEquals", "notIn"]}
         }
       },
       "required": ["comparison"],

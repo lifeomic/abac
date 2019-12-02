@@ -622,3 +622,79 @@ test('returns false for invalid policy', t => {
 
   t.false(enforce('readData', policy, {}));
 });
+
+test('rules can use notEquals with explicit values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.key': {
+            comparison: 'notEquals',
+            value: 42
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {key: 13}}));
+  t.false(enforce('readData', policy, {object: {key: 42}}));
+});
+
+test('rules can use notEquals with referenced values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.key': {
+            comparison: 'notEquals',
+            target: 'object.value'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {key: 13, value: 42}}));
+  t.false(enforce('readData', policy, {object: {key: 42, value: 42}}));
+  t.false(enforce('readData', policy, {object: {key: 13}}));
+});
+
+test('rules can use notIn with explicit values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.key': {
+            comparison: 'notIn',
+            value: [1, 2]
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {key: 3}}));
+  t.false(enforce('readData', policy, {object: {key: 1}}));
+  t.false(enforce('readData', policy, {object: {key: 2}}));
+});
+
+test('rules can use notIn with referenced values', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.key': {
+            comparison: 'notIn',
+            target: 'object.value'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {key: 3, value: [1, 2]}}));
+  t.false(enforce('readData', policy, {object: {key: 1, value: [1, 2]}}));
+  t.false(enforce('readData', policy, {object: {key: 2, value: [1, 2]}}));
+  t.false(enforce('readData', policy, {object: {key: 3}}));
+});

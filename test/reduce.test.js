@@ -177,4 +177,6 @@ test('rules with undefined comparison targets should not be reduced', t => {
   assertComparisonNotReduced(t, 'equals');
   assertComparisonNotReduced(t, 'superset', ['test']);
   assertComparisonNotReduced(t, 'includes', ['test']);
+  assertComparisonNotReduced(t, 'notEquals');
+  assertComparisonNotReduced(t, 'notIn', ['test']);
 });
