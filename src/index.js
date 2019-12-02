@@ -150,6 +150,10 @@ const compare = (condition, value, attributes) => {
     case 'exists':
       return value !== undefined;
 
+    case 'notEquals':
+      if (compareValue === undefined) return undefined;
+      return value !== compareValue;
+
     case 'superset':
       if (compareValue === undefined) return undefined;
       return Array.isArray(value) && compareValue.every(x => value.includes(x));
