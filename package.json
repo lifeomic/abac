@@ -41,6 +41,9 @@
     "sinon": "^5.0.7",
     "tap-xunit": "^2.3.0"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "eslintConfig": {
     "extends": "plugin:@lifeomic/node/recommended",
     "parserOptions": {
