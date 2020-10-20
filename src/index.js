@@ -369,7 +369,27 @@ const privilegesSync = deprecate(privilegesLenient,
   '@lifeomic/abac privilegesSync(...) is deprecated. Use privilegesLenient(...) instead.');
 
 /**
- * Synchronously determines if a given attribute path is in the list of rules
+ * Return true iff left is a path prefix of right
+ */
+const isPathPrefix = (left, right) => {
+  const lhs = left.split('.');
+  const rhs = right.split('.');
+
+  if (lhs.length > rhs.length) {
+    return false;
+  }
+
+  for (let i = 0; i < lhs.length; ++i) {
+    if (lhs[i] !== rhs[i]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * Synchronously determines if a given attribute path is used in the rules
  * for a given policy. This may be useful for determining if additional metadata
  * should be fetched before enforcing a policy.
  *
@@ -381,7 +401,20 @@ const policyRequiresAttribute = (policy, attribute) => {
   const rules = Object.values(policy.rules)
     .filter(rule => Array.isArray(rule))
     .reduce((left, right) => left.concat(right), []);
-  return rules.some(rule => rule.hasOwnProperty(attribute));
+
+  for (const rule of rules) {
+    for (const key in rule) {
+      if (isPathPrefix(attribute, key)) {
+        return true;
+      } else {
+        const target = rule[key].target;
+        if (target && isPathPrefix(attribute, target)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
 };
 
 export {
