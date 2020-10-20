@@ -1,6 +1,6 @@
 {
   "name": "@lifeomic/abac",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Lifeomic Attribute Based Access Control Support Module",
   "main": "./dist/index.js",
   "browser": "./lib/index.js",
