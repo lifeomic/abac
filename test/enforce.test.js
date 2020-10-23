@@ -639,8 +639,10 @@ test('rules can use equals with complex types', t => {
 
   t.true(enforce('readData', policy, {a: [1, 2, 3], b: [1, 2, 3]}));
   t.false(enforce('readData', policy, {a: [1, 2, 3], b: ['one', 'two', 'three']}));
+  t.true(enforce('readData', policy, {a: true, b: true}));
   t.true(enforce('readData', policy, {a: 'A', b: 'A'}));
   t.false(enforce('readData', policy, {a: 'A', b: 'B'}));
+  t.false(enforce('readData', policy, {a: true, b: false}));
 });
 
 test('rules can use not equals with complex types', t => {
@@ -659,8 +661,10 @@ test('rules can use not equals with complex types', t => {
 
   t.false(enforce('readData', policy, {a: [1, 2, 3], b: [1, 2, 3]}));
   t.true(enforce('readData', policy, {a: [1, 2, 3], b: ['one', 'two', 'three']}));
+  t.false(enforce('readData', policy, {a: true, b: true}));
   t.false(enforce('readData', policy, {a: 'A', b: 'A'}));
   t.true(enforce('readData', policy, {a: 'A', b: 'B'}));
+  t.true(enforce('readData', policy, {a: true, b: false}));
 });
 
 test('rules can use subset with value', t => {

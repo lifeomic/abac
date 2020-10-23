@@ -63,6 +63,29 @@ test('target should support wildcards', t => {
   t.true(validate(policy));
 });
 
+test('equals and notEquals should support bools', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.hot': {
+            comparison: 'equals',
+            value: true
+          }
+        },
+        {
+          'resource.cold': {
+            comparison: 'notEquals',
+            value: false
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});
+
 test('All access should validate', t => {
   const policy = {
     rules: {
