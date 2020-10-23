@@ -8,7 +8,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["superset", "in", "notIn"]
+          "enum": ["superset", "subset", "in", "notIn", "equals", "notEquals"]
         },
         "value": {
           "type": "array",
@@ -37,11 +37,11 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["superset", "in", "equals", "includes", "notEquals", "notIn"]
+          "enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn"]
         },
         "target": {
           "type": "string",
-          "pattern": "^[$a-zA-Z_][$0-9a-zA-Z_]*(\\.[$0-9a-zA-Z_]*)*$"
+          "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
         }
       },
       "required": ["comparison", "target"],
@@ -51,7 +51,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "not": {"enum": ["superset", "in", "equals", "includes", "notEquals", "notIn"]}
+          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn"]}
         }
       },
       "required": ["comparison"],

@@ -3,6 +3,7 @@
 import schemas from './schemas';
 import Ajv from 'ajv';
 import deprecate from 'util-deprecate';
+import equals from 'fast-deep-equal';
 
 const ajv = new Ajv();
 
@@ -145,14 +146,14 @@ const compare = (condition, value, attributes) => {
 
     case 'equals':
       if (compareValue === undefined) return undefined;
-      return value === compareValue;
+      return equals(value, compareValue);
 
     case 'exists':
       return value !== undefined;
 
     case 'notEquals':
       if (compareValue === undefined) return undefined;
-      return value !== compareValue;
+      return !equals(value, compareValue);
 
     case 'notIn':
       if (compareValue === undefined) return undefined;
@@ -160,7 +161,11 @@ const compare = (condition, value, attributes) => {
 
     case 'superset':
       if (compareValue === undefined) return undefined;
-      return Array.isArray(value) && compareValue.every(x => value.includes(x));
+      return Array.isArray(value) && Array.isArray(compareValue) && compareValue.every(x => value.includes(x));
+
+    case 'subset':
+      if (compareValue === undefined) return undefined;
+      return Array.isArray(value) && Array.isArray(compareValue) && value.every(x => compareValue.includes(x));
 
     default:
       // for unknown comparison types simply deny access:

@@ -46,6 +46,23 @@ test('RFC example should validate', t => {
   t.true(validate(policy));
 });
 
+test('target should support wildcards', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.tags': {
+            comparison: 'superset',
+            target: 'patient.consents.*.tags'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(validate(policy));
+});
+
 test('All access should validate', t => {
   const policy = {
     rules: {

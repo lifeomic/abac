@@ -357,7 +357,7 @@ test('enforceAny returns false when none of the operations are allowed', t => {
   t.false(enforceAny(['readData', 'readAnonData'], policy, {}));
 });
 
-test('rules can reference vaules in an array', t => {
+test('rules can reference values in an array', t => {
   const policy = {
     rules: {
       readData: [
@@ -621,6 +621,86 @@ test('returns false for invalid policy', t => {
   };
 
   t.false(enforce('readData', policy, {}));
+});
+
+test('rules can use equals with complex types', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'a': {
+            comparison: 'equals',
+            target: 'b'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {a: [1, 2, 3], b: [1, 2, 3]}));
+  t.false(enforce('readData', policy, {a: [1, 2, 3], b: ['one', 'two', 'three']}));
+  t.true(enforce('readData', policy, {a: 'A', b: 'A'}));
+  t.false(enforce('readData', policy, {a: 'A', b: 'B'}));
+});
+
+test('rules can use not equals with complex types', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'a': {
+            comparison: 'notEquals',
+            target: 'b'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {a: [1, 2, 3], b: [1, 2, 3]}));
+  t.true(enforce('readData', policy, {a: [1, 2, 3], b: ['one', 'two', 'three']}));
+  t.false(enforce('readData', policy, {a: 'A', b: 'A'}));
+  t.true(enforce('readData', policy, {a: 'A', b: 'B'}));
+});
+
+test('rules can use subset with value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'a': {
+            comparison: 'subset',
+            value: [1, 2, 3]
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {a: [1, 2, 3]}));
+  t.true(enforce('readData', policy, {a: [1]}));
+  t.false(enforce('readData', policy, {a: [4, 5, 6]}));
+});
+
+test('rules can use subset with target', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'a': {
+            comparison: 'subset',
+            target: 'b'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {a: [1, 2, 3], b: [1, 2, 3]}));
+  t.true(enforce('readData', policy, {a: [1], b: [1, 2, 3]}));
+  t.false(enforce('readData', policy, {a: [4, 5, 6], b: [1, 2, 3]}));
+  t.false(enforce('readData', policy, {a: [4, 5, 6]}));
+  t.false(enforce('readData', policy, {a: '12', b: '123'}));
 });
 
 test('rules can use notEquals with explicit values', t => {
