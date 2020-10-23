@@ -37,6 +37,19 @@
       "properties": {
         "comparison": {
           "type": "string",
+          "enum": ["equals", "notEquals"]
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "required": ["comparison", "value"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
           "enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn"]
         },
         "target": {
