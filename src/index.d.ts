@@ -54,6 +54,18 @@ export type AbacRuleComparison = (
   export function reduce(policy: AbacReducedPolicy, attributes: object): AbacReducedPolicy;
 
   /**
+   * Extract a rule for a given privilege and attribute from the policy.
+   * The function's intended use is to provide the comparison and values (e.g. uuids) for a resource type
+   * e.g. resource.cohort: {comparison: 'equals', target: uuid}
+   * @param policy - the policy to evaluate
+   * @param privilege - the privilege to use for the evaluation
+   * @param attribute - the attribute to use for the evaluation
+   * @returns {object} An array of rules matching the privilege and attribute
+   * @throws {Error} Error if the policy is invalid
+   */
+  export function extract(policy: AbacReducedPolicy, privilege: string, attribute: string): AbacRule[];
+
+  /**
    * Check whether the given policy allows the operation with the given attributes.
    * @param {string} operation - the requested operation
    * @param {object} policy - the policy to use to check access

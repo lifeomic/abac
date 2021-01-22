@@ -21,6 +21,7 @@ import * as abac from '@lifeomic/abac';
 abac.validate(policy);
 abac.merge(policies);
 abac.reduce(policy, attributes);
+abac.extract(policy, privilege, attribute);
 abac.enforce(operationName, policy, attributes);
 abac.enforceLenient(operationName, policy, attributes);
 abac.enforceAny(operationName, policy, attributes);
