@@ -7,7 +7,7 @@ test('should return rule values', t => {
   const expectedId2 = uuid();
   const policy = {
     rules: {
-      accessAdmin: false,
+      accessAdmin: true,
       writeData: true,
       readData: [
         {
@@ -18,7 +18,7 @@ test('should return rule values', t => {
         },
         {
           'resource.cohort': {
-            comparison: 'includes',
+            comparison: 'in',
             target: [expectedId1, expectedId2]
           }
         },
@@ -32,7 +32,7 @@ test('should return rule values', t => {
     }
   };
 
-  t.deepEqual(extract(policy, 'readData', 'resource.cohort'), [{target: [expectedId1, expectedId2], comparison: 'includes'}]);
+  t.deepEqual(extract(policy, 'readData', 'resource.cohort'), [{target: [expectedId1, expectedId2], comparison: 'in'}]);
 });
 
 test('should return attribute values and comparison value only for privilege to be checked', t => {
@@ -56,7 +56,7 @@ test('should return attribute values and comparison value only for privilege to 
         },
         {
           'resource.cohort': {
-            comparison: 'equals',
+            comparison: 'in',
             target: [expectedId1, expectedId2]
           }
         },
@@ -89,7 +89,7 @@ test('No rules should be extracted for a boolean operation', t => {
         },
         {
           'resource.cohort': {
-            comparison: 'equals',
+            comparison: 'in',
             target: [expectedId1, expectedId2]
           }
         },
