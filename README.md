@@ -11,6 +11,22 @@ This module is suitable for use in both UIs and backend node.js services.
 yarn install @lifeomic/abac
 ```
 
+## Terminology
+* Rules
+    * Comparison
+        * equals: Value being checked is exactly equal to the value defined in the ABAC policy
+        * notEquals: Value being checked does not equal the value defined in the ABAC policy
+        * in: value being checked is contained within the array in ABAC policy
+        * notIn: value not in ABAC array
+        * includes: array of values includes the value in the ABAC policy
+        * notIncludes: array of values does not include value listed in ABAC policy
+        * superset: array of values is a superset of the array in the ABAC policy
+        * subset: array of values is a subset of the array in the ABAC policy
+    * Target
+        * Value of another attribute
+    * Value
+        * Literal value
+
 ## Usage
 
 **TypeScript usage:**

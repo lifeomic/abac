@@ -68,17 +68,15 @@ const merge = (policies) => {
   return {rules: result};
 };
 
-const extract = (policy, privilege, attribute) => {
+// returns an array of values for each instance of the attribute under the given privileges
+const extract = (policy, privileges, attribute) => {
   validate(policy);
-  return Object.entries(policy.rules).map(([operation, rules]) => {
-    if (Array.isArray(rules) && privilege === operation) {
-      for (const rule of rules) {
-        if (rule[attribute]) {
-          return rule[attribute];
-        }
-      }
+  const comparisons = Object.entries(policy.rules).map(([operation, rules]) => {
+    if (Array.isArray(rules) && privileges.includes(operation)) {
+      return rules.map(rule => rule[attribute]).filter(Boolean);
     }
   }).filter(Boolean);
+  return comparisons.flat(1);
 };
 
 /**

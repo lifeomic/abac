@@ -17,9 +17,9 @@ test('should return rule values', t => {
           }
         },
         {
-          'resource.cohort': {
-            comparison: 'in',
-            target: [expectedId1, expectedId2]
+          'resource.cohorts': {
+            comparison: 'subset',
+            value: [expectedId1, expectedId2]
           }
         },
         {
@@ -32,7 +32,7 @@ test('should return rule values', t => {
     }
   };
 
-  t.deepEqual(extract(policy, 'readData', 'resource.cohort'), [{target: [expectedId1, expectedId2], comparison: 'in'}]);
+  t.deepEqual(extract(policy, ['readData'], 'resource.cohorts'), [{value: [expectedId1, expectedId2], comparison: 'subset'}]);
 });
 
 test('should return attribute values and comparison value only for privilege to be checked', t => {
@@ -42,9 +42,9 @@ test('should return attribute values and comparison value only for privilege to 
     rules: {
       accessAdmin: true,
       writeData: [{
-        'resource.cohort': {
-          comparison: 'equals',
-          target: expectedId1
+        'resource.cohorts': {
+          comparison: 'includes',
+          value: expectedId1
         }
       }],
       readData: [
@@ -55,9 +55,9 @@ test('should return attribute values and comparison value only for privilege to 
           }
         },
         {
-          'resource.cohort': {
-            comparison: 'in',
-            target: [expectedId1, expectedId2]
+          'resource.cohorts': {
+            comparison: 'subset',
+            value: [expectedId1, expectedId2]
           }
         },
         {
@@ -70,7 +70,45 @@ test('should return attribute values and comparison value only for privilege to 
     }
   };
 
-  t.deepEqual(extract(policy, 'writeData', 'resource.cohort'), [{target: expectedId1, comparison: 'equals'}]);
+  t.deepEqual(extract(policy, ['writeData'], 'resource.cohorts'), [{value: expectedId1, comparison: 'includes'}]);
+});
+
+test('should return attribute values and comparison value for mutliple privileges', t => {
+  const expectedId1 = uuid();
+  const expectedId2 = uuid();
+  const policy = {
+    rules: {
+      accessAdmin: true,
+      readMaskedData: [{
+        'resource.cohorts': {
+          comparison: 'includes',
+          value: expectedId1
+        }
+      }],
+      readData: [
+        {
+          'user.patients': {
+            comparison: 'includes',
+            target: 'resource.subject'
+          }
+        },
+        {
+          'resource.cohorts': {
+            comparison: 'subset',
+            value: [expectedId1, expectedId2]
+          }
+        },
+        {
+          'something': {
+            comparison: 'equals',
+            target: 'other.value'
+          }
+        }
+      ]
+    }
+  };
+
+  t.deepEqual(extract(policy, ['readData', 'readMaskedData'], 'resource.cohorts'), [{value: expectedId1, comparison: 'includes'}, {value: [expectedId1, expectedId2], comparison: 'subset'}]);
 });
 
 test('No rules should be extracted for a boolean operation', t => {
@@ -88,9 +126,9 @@ test('No rules should be extracted for a boolean operation', t => {
           }
         },
         {
-          'resource.cohort': {
-            comparison: 'in',
-            target: [expectedId1, expectedId2]
+          'resource.cohorts': {
+            comparison: 'subset',
+            value: [expectedId1, expectedId2]
           }
         },
         {
@@ -103,5 +141,5 @@ test('No rules should be extracted for a boolean operation', t => {
     }
   };
 
-  t.deepEqual(extract(policy, 'writeData', 'resource.cohort'), []);
+  t.deepEqual(extract(policy, ['writeData'], 'resource.cohorts'), []);
 });
