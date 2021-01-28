@@ -19,7 +19,6 @@ yarn install @lifeomic/abac
         * in: value being checked is contained within the array in ABAC policy
         * notIn: value not in ABAC array
         * includes: array of values includes the value in the ABAC policy
-        * notIncludes: array of values does not include value listed in ABAC policy
         * superset: array of values is a superset of the array in the ABAC policy
         * subset: array of values is a subset of the array in the ABAC policy
     * Target
@@ -37,7 +36,7 @@ import * as abac from '@lifeomic/abac';
 abac.validate(policy);
 abac.merge(policies);
 abac.reduce(policy, attributes);
-abac.extract(policy, privilege, attribute);
+abac.extract(policy, privileges, attribute);
 abac.enforce(operationName, policy, attributes);
 abac.enforceLenient(operationName, policy, attributes);
 abac.enforceAny(operationName, policy, attributes);
