@@ -68,6 +68,17 @@ const merge = (policies) => {
   return {rules: result};
 };
 
+// returns an array of values for each instance of the attribute under the given privileges
+const extract = (policy, privileges, attribute) => {
+  validate(policy);
+  const comparisons = Object.entries(policy.rules).map(([operation, rules]) => {
+    if (Array.isArray(rules) && privileges.includes(operation)) {
+      return rules.map(rule => rule[attribute]).filter(Boolean);
+    }
+  }).filter(Boolean);
+  return comparisons.flat(1);
+};
+
 /**
  * Get a list of all values matching the path (including wildcards).
  * @param {object} attributes - attributes as nested objects
@@ -431,6 +442,7 @@ export {
   enforceLenient,
   enforceSync /* deprecated */,
   enforceAny,
+  extract,
   privileges,
   privilegesLenient,
   privilegesSync /* deprecated */,

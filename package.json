@@ -40,7 +40,8 @@
     "eslint": "^4.19.1",
     "nyc": "^11.8.0",
     "sinon": "^5.0.7",
-    "tap-xunit": "^2.3.0"
+    "tap-xunit": "^2.3.0",
+    "uuid": "^3.3.2"
   },
   "publishConfig": {
     "access": "public"
