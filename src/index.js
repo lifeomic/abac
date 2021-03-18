@@ -190,6 +190,10 @@ const reduceRule = (rule, attributes) => {
   for (const [name, condition] of Object.entries(rule)) {
     const values = getAttributeValues(attributes, name.split('.'));
 
+    if (typeof condition.value === 'boolean' && values.length === 0) {
+      values.push(false);
+    }
+
     if (values.length === 0) {
       result[name] = condition;
     } else {

@@ -782,3 +782,43 @@ test('rules can use notIn with referenced values', t => {
   t.false(enforce('readData', policy, {object: {key: 2, value: [1, 2]}}));
   t.false(enforce('readData', policy, {object: {key: 3}}));
 });
+
+test('return true for policy with boolean value when attribute is not set', t => {
+  const policy = {
+    'rules': {
+      'readData': [{
+        'resource.cohorts': {
+          'value': '642390ca-4c15-4e7f-b459-28b16def2c2b',
+          'comparison': 'includes'
+        }
+      },
+      {
+        'resource.cohortAffinity': {
+          'value': true, 'comparison': 'notEquals'
+        }
+      }]
+    }
+  };
+  const any = enforce('readData', policy, {});
+  t.true(any);
+});
+
+test('return false for policy with boolean value when attribute is set', t => {
+  const policy = {
+    'rules': {
+      'readData': [{
+        'resource.cohorts': {
+          'value': '642390ca-4c15-4e7f-b459-28b16def2c2b',
+          'comparison': 'includes'
+        }
+      },
+      {
+        'resource.cohortAffinity': {
+          'value': true, 'comparison': 'notEquals'
+        }
+      }]
+    }
+  };
+  const any = enforce('readData', policy, {resource: {cohortAffinity: true}});
+  t.false(any);
+});
