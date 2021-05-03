@@ -73,7 +73,7 @@ export type AbacRuleComparison = (
    * @returns {boolean} true iff access is allowed, and false otherwise
    * @throws {Error} Error if the policy is invalid
    */
-  export function enforce(operationName: string, policy: AbacReducedPolicy, attributes: object): boolean;
+  export function enforce(operationName: string, policy: AbacReducedPolicy, attributes?: object): boolean;
 
   /**
    * Performs a check for whether the given policy might
@@ -90,7 +90,7 @@ export type AbacRuleComparison = (
    * @returns {boolean} true iff access is allowed, and false otherwise
    * @throws {Error} Error if the policy is invalid
    */
-  export function enforceLenient(operationName: string, policy: AbacReducedPolicy, attributes: object): boolean;
+  export function enforceLenient(operationName: string, policy: AbacReducedPolicy, attributes?: object): boolean;
 
   /**
    * Check whether the given policy allows one of a list of operations
@@ -101,7 +101,7 @@ export type AbacRuleComparison = (
    * @returns {boolean|string} - the first allowed operation or false
    * @throws {Error} Error if the policy is invalid
    */
-  export function enforceAny(operationName: string[], policy: AbacReducedPolicy, attributes: object): boolean;
+  export function enforceAny(operationName: string[], policy: AbacReducedPolicy, attributes?: object): boolean;
 
   /**
    * Synchronously return the list of privileges that the given policy

@@ -85,7 +85,7 @@ const extract = (policy, privileges, attribute) => {
  * @param {array} path - array of path segments
  */
 const getAttributeValues = (attributes, path) => {
-  if (attributes === undefined) {
+  if (attributes === undefined || attributes === null) {
     return [];
   }
 
