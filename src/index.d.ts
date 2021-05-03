@@ -113,7 +113,7 @@ export type AbacRuleComparison = (
    * @returns {string[]} - the list of privileges
    * @throws {Error} Error if the policy is invalid
    */
-  export function privilegesLenient(policy: AbacReducedPolicy, attributes?: object): string[];
+  export function privilegesLenient(policy: AbacReducedPolicy, attributes: object): string[];
 
   /**
    * Return the list of privileges that the given policy
@@ -123,7 +123,7 @@ export type AbacRuleComparison = (
    * @returns {string[]} - the list of privileges
    * @throws {Error} Error if the policy is invalid
    */
-  export function privileges(policy: AbacReducedPolicy, attributes?: object): string[];
+  export function privileges(policy: AbacReducedPolicy, attributes: object): string[];
 
   /**
    * Synchronously determines if a given attribute path is in the list of rules
