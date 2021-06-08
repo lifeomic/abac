@@ -178,6 +178,13 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       return Array.isArray(value) && Array.isArray(compareValue) && value.every(x => compareValue.includes(x));
 
+    case 'matches':
+      if (compareValue === undefined) return undefined;
+      // we want to construct express here
+      // eslint-disable-next-line security/detect-non-literal-regexp
+      const regex = new RegExp(compareValue);
+      return regex.test(value);
+
     default:
       // for unknown comparison types simply deny access:
       return false;
