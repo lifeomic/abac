@@ -180,7 +180,7 @@ const compare = (condition, value, attributes) => {
 
     case 'matches':
       if (compareValue === undefined) return undefined;
-      // we want to construct express here
+      // we want to construct expression here
       // eslint-disable-next-line security/detect-non-literal-regexp
       const regex = new RegExp(compareValue);
       return regex.test(value);
