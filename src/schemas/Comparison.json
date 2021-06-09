@@ -24,7 +24,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["includes", "equals", "notEquals"]
+          "enum": ["includes", "equals", "notEquals", "matches"]
         },
         "value": {
           "type": ["number", "string"]
@@ -64,7 +64,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn"]}
+          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn", "matches"]}
         }
       },
       "required": ["comparison"],

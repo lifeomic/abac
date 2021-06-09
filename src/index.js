@@ -180,7 +180,6 @@ const compare = (condition, value, attributes) => {
       return Array.isArray(value) && Array.isArray(compareValue) && value.every(x => compareValue.includes(x));
 
     case 'matches':
-      if (compareValue === undefined) return undefined;
       // we want to construct expression here
       // eslint-disable-next-line security/detect-non-literal-regexp
       const regex = new RE2(compareValue);
