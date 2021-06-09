@@ -4,6 +4,7 @@ import schemas from './schemas';
 import Ajv from 'ajv';
 import deprecate from 'util-deprecate';
 import equals from 'fast-deep-equal';
+import RE2 from 're2';
 
 const ajv = new Ajv();
 
@@ -182,7 +183,7 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       // we want to construct expression here
       // eslint-disable-next-line security/detect-non-literal-regexp
-      const regex = new RegExp(compareValue);
+      const regex = new RE2(compareValue);
       return regex.test(value);
 
     default:
