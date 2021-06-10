@@ -24,13 +24,30 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["includes", "equals", "notEquals", "matches"]
+          "enum": ["includes", "equals", "notEquals"]
         },
         "value": {
           "type": ["number", "string"]
         }
       },
       "required": ["comparison", "value"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
+          "enum": ["matches"]
+        },
+        "value": {
+          "type": ["string"]
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
+        }
+      },
+      "required": ["comparison"],
       "additionalProperties": false
     },
     {

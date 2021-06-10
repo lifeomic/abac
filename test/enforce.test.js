@@ -820,3 +820,37 @@ test('rules can use matches operator with no value', t => {
 
   t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
 });
+
+test('rules can use matches operator with no target value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'matches',
+            target: 'object.id'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
+});
+
+test('rules can use matches operator with with target value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'matches',
+            target: 'object.id'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {id: 'foo!', value: 'foo!'}}), 'enforce string');
+});
