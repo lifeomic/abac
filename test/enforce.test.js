@@ -783,28 +783,6 @@ test('rules can use notIn with referenced values', t => {
   t.false(enforce('readData', policy, {object: {key: 3}}));
 });
 
-test('rules can use matches operator with value', t => {
-  const policy = {
-    rules: {
-      readData: [
-        {
-          'object.value': {
-            comparison: 'matches',
-            value: '^(([a-z])+.)'
-          }
-        }
-      ]
-    }
-  };
-
-  t.true(enforce('readData', policy, {object: {value: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!'}}), 'enforce string');
-  t.false(enforce('readData', policy, {object: {value: ''}}), 'enforce empty string');
-  t.false(enforce('readData', policy, {object: {value: undefined}}), 'enforce undefined');
-  t.false(enforce('readData', policy, {object: {value: null}}), 'enforce null');
-  t.false(enforce('readData', policy, {object: {value: 1}}), 'enforce number');
-  t.false(enforce('readData', policy, {object: {value: ' '}}), 'enforce space');
-});
-
 test('rules can use matches operator with no value', t => {
   const policy = {
     rules: {
