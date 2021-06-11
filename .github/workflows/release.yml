@@ -1,38 +1,20 @@
-name: Release
-
+name: Publish Node.js Package
 on:
-  push:
-    tags:
-      - 'v*'
-    branches:
-      - master
+  release:
+    types: [created]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Exit if not on master branch
-      if: endsWith(github.ref, 'master') == false
-      run: exit 0
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12
-        registry-url: https://registry.npmjs.org
-    - name: Build and Test
-      run: |
-        yarn
-        yarn test
-        yarn build
-        npm publish --access public
-      env:
-          NODE_AUTH_TOKEN: ${{secrets.LIFEOMIC_NPM_TOKEN}}
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@latest
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        draft: false
-        prerelease: false
+      - uses: actions/checkout@v2
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: yarn install
+      - run: yarn test
+      - run: yarn build
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
