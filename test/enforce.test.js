@@ -783,35 +783,35 @@ test('rules can use notIn with referenced values', t => {
   t.false(enforce('readData', policy, {object: {key: 3}}));
 });
 
-test('rules can use matches operator with value', t => {
+test('rules can use startsWith operator with value', t => {
   const policy = {
     rules: {
       readData: [
         {
           'object.value': {
-            comparison: 'matches',
-            value: '^(([a-z])+.)'
+            comparison: 'startsWith',
+            value: 'lifeomic/boo/foo'
           }
         }
       ]
     }
   };
 
-  t.true(enforce('readData', policy, {object: {value: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!'}}), 'enforce string');
-  t.false(enforce('readData', policy, {object: {value: ''}}), 'enforce empty string');
+  t.true(enforce('readData', policy, {object: {value: 'lifeomic/boo/foo'}}), 'enforce string');
+  t.false(enforce('readData', policy, {object: {value: 'dd/lifeomic/boo/foo'}}), 'enforce ends string');
   t.false(enforce('readData', policy, {object: {value: undefined}}), 'enforce undefined');
   t.false(enforce('readData', policy, {object: {value: null}}), 'enforce null');
   t.false(enforce('readData', policy, {object: {value: 1}}), 'enforce number');
   t.false(enforce('readData', policy, {object: {value: ' '}}), 'enforce space');
 });
 
-test('rules can use matches operator with no value', t => {
+test('rules can use startsWith operator with no value', t => {
   const policy = {
     rules: {
       readData: [
         {
           'object.value': {
-            comparison: 'matches'
+            comparison: 'startsWith'
           }
         }
       ]
@@ -821,13 +821,13 @@ test('rules can use matches operator with no value', t => {
   t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
 });
 
-test('rules can use matches operator with no target value', t => {
+test('rules can use startsWith operator with no target value', t => {
   const policy = {
     rules: {
       readData: [
         {
           'object.value': {
-            comparison: 'matches',
+            comparison: 'startsWith',
             target: 'object.id'
           }
         }
@@ -838,13 +838,85 @@ test('rules can use matches operator with no target value', t => {
   t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
 });
 
-test('rules can use matches operator with with target value', t => {
+test('rules can use startsWith operator with with target value', t => {
   const policy = {
     rules: {
       readData: [
         {
           'object.value': {
-            comparison: 'matches',
+            comparison: 'startsWith',
+            target: 'object.id'
+          }
+        }
+      ]
+    }
+  };
+
+  t.true(enforce('readData', policy, {object: {id: 'foo!', value: 'foo!'}}), 'enforce string');
+});
+
+test('rules can use startsWith operator with value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'endsWith',
+            value: 'lifeomic/boo/foo'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {object: {value: 'lifeomic/boo/foo/bar/bar'}}), 'enforce string');
+  t.true(enforce('readData', policy, {object: {value: 'dd/lifeomic/boo/foo'}}), 'enforce ends string');
+  t.false(enforce('readData', policy, {object: {value: undefined}}), 'enforce undefined');
+  t.false(enforce('readData', policy, {object: {value: null}}), 'enforce null');
+  t.false(enforce('readData', policy, {object: {value: 1}}), 'enforce number');
+  t.false(enforce('readData', policy, {object: {value: ' '}}), 'enforce space');
+});
+
+test('rules can use endsWith operator with no value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'endsWith'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
+});
+
+test('rules can use endsWith operator with no target value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'endsWith',
+            target: 'object.id'
+          }
+        }
+      ]
+    }
+  };
+
+  t.false(enforce('readData', policy, {object: {value: 'foo'}}), 'enforce string');
+});
+
+test('rules can use endsWith operator with with target value', t => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'object.value': {
+            comparison: 'endsWith',
             target: 'object.id'
           }
         }
