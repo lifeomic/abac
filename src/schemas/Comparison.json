@@ -37,7 +37,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["matches"]
+          "enum": ["startsWith", "endsWith"]
         },
         "value": {
           "type": ["string"]
@@ -81,7 +81,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn", "matches"]}
+          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn", "startsWith", "endsWith"]}
         }
       },
       "required": ["comparison"],
