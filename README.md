@@ -52,4 +52,6 @@ See unit tests in `/test` folder - many good examples.
 ## Release process
 
 Increment the version in `package.json`, make a PR, merge the PR,
-and then finally tag master with a tag like `v4.5.3`.
+and then finally create a new release using the github UI. Creating
+the release will publish the head of master to npm. Name the
+release `vX.Y.Z` to match the version in `package.json`.
