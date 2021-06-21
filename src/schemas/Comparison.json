@@ -37,6 +37,23 @@
       "properties": {
         "comparison": {
           "type": "string",
+          "enum": ["startsWith", "endsWith"]
+        },
+        "value": {
+          "type": ["string"]
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
+        }
+      },
+      "required": ["comparison"],
+      "additionalProperties": false
+    },
+    {
+      "properties": {
+        "comparison": {
+          "type": "string",
           "enum": ["equals", "notEquals"]
         },
         "value": {
@@ -64,7 +81,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn"]}
+          "not": {"enum": ["superset", "subset", "in", "equals", "includes", "notEquals", "notIn", "startsWith", "endsWith"]}
         }
       },
       "required": ["comparison"],

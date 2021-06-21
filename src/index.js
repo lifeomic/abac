@@ -178,6 +178,14 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       return Array.isArray(value) && Array.isArray(compareValue) && value.every(x => compareValue.includes(x));
 
+    case 'startsWith':
+      if (compareValue === undefined) return undefined;
+      return (typeof value === 'string' || value instanceof String) && value.startsWith(compareValue);
+
+    case 'endsWith':
+      if (compareValue === undefined) return undefined;
+      return (typeof value === 'string' || value instanceof String) && value.endsWith(compareValue);
+
     default:
       // for unknown comparison types simply deny access:
       return false;

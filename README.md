@@ -21,6 +21,8 @@ yarn install @lifeomic/abac
         * includes: array of values includes the value in the ABAC policy
         * superset: array of values is a superset of the array in the ABAC policy
         * subset: array of values is a subset of the array in the ABAC policy
+        * startsWith: Value being checked that starts with an exact string value
+        * endsWith: Value being checked that ends with an exact string value
     * Target
         * Value of another attribute
     * Value
