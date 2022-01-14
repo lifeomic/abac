@@ -1,20 +1,12 @@
-name: Publish Node.js Package
-on:
-  release:
-    types: [created]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      # Setup .npmrc file to publish to npm
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '12.x'
-          registry-url: 'https://registry.npmjs.org'
-      - run: yarn install
-      - run: yarn test
-      - run: yarn build
-      - run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
+bmFtZTogUHVibGlzaCBOb2RlLmpzIFBhY2thZ2UKb246CiAgcmVsZWFzZToK
+ICAgIHR5cGVzOiBbY3JlYXRlZF0Kam9iczoKICBidWlsZDoKICAgIHJ1bnMt
+b246IHVidW50dS1sYXRlc3QKICAgIHN0ZXBzOgogICAgICAtIHVzZXM6IGFj
+dGlvbnMvY2hlY2tvdXRAdjIKICAgICAgIyBTZXR1cCAubnBtcmMgZmlsZSB0
+byBwdWJsaXNoIHRvIG5wbQogICAgICAtIHVzZXM6IGFjdGlvbnMvc2V0dXAt
+bm9kZUB2MgogICAgICAgIHdpdGg6CiAgICAgICAgICBub2RlLXZlcnNpb246
+ICcxMi54JwogICAgICAgICAgcmVnaXN0cnktdXJsOiAnaHR0cHM6Ly9yZWdp
+c3RyeS5ucG1qcy5vcmcnCiAgICAgIC0gcnVuOiB5YXJuIGluc3RhbGwKICAg
+ICAgLSBydW46IHlhcm4gdGVzdAogICAgICAtIHJ1bjogeWFybiBidWlsZAog
+ICAgICAtIHJ1bjogbnBtIHB1Ymxpc2ggLS1hY2Nlc3MgcHVibGljCiAgICAg
+ICAgZW52OgogICAgICAgICAgTk9ERV9BVVRIX1RPS0VOOiAke3sgc2VjcmV0
+cy5MSUZFT01JQ19OUE1fVE9LRU4gfX0K
