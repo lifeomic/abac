@@ -101,7 +101,7 @@ export type AbacRuleComparison = (
    * @returns {boolean|string} - the first allowed operation or false
    * @throws {Error} Error if the policy is invalid
    */
-  export function enforceAny(operationName: string[], policy: AbacReducedPolicy, attributes?: object): boolean;
+  export function enforceAny(operationName: string[], policy: AbacReducedPolicy, attributes?: object): boolean | string;
 
   /**
    * Synchronously return the list of privileges that the given policy
