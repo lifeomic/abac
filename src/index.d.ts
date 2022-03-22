@@ -31,7 +31,7 @@ export type AbacRuleComparison = (
    * @returns {boolean} true iff the policy is valid
    * @throws Error if the policy is invalid
    */
-  export function validate(policy: AbacPolicy): boolean;
+  export function validate(policy: AbacPolicy): true;
 
   /**
    * Merge multiple policies into a single policy with the same effect.
