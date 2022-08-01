@@ -16,11 +16,12 @@ jobs:
           node-version: 14
           registry-url: 'https://registry.npmjs.org'
       - run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           yarn install
           yarn test
           yarn build
       - env:
           NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: yarn semantic-release
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          yarn semantic-release
