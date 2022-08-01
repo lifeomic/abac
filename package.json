@@ -30,7 +30,7 @@
     "util-deprecate": "^1.0.2"
   },
   "devDependencies": {
-    "@lifeomic/eslint-plugin-node": "^1.1.0",
+    "@lifeomic/eslint-config-standards": "^3.0.0",
     "ava": "0.25.0",
     "babel-cli": "6.26.0",
     "babel-plugin-transform-class-properties": "^6.24.1",
@@ -38,8 +38,11 @@
     "babel-plugin-transform-runtime": "^6.23.0",
     "babel-preset-env": "^1.7.0",
     "conventional-changelog-conventionalcommits": "^5.0.0",
-    "eslint": "^4.19.1",
+    "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "nyc": "^11.8.0",
+    "prettier": "^2.7.1",
     "semantic-release": "^19.0.3",
     "sinon": "^5.0.7",
     "tap-xunit": "^2.3.0",
@@ -49,10 +52,20 @@
     "access": "public"
   },
   "eslintConfig": {
-    "extends": "plugin:@lifeomic/node/recommended",
+    "extends": [
+      "@lifeomic/standards/javascript",
+      "prettier",
+      "plugin:prettier/recommended"
+    ],
+    "env": {
+      "commonjs": true
+    },
     "parserOptions": {
       "ecmaVersion": 8,
       "sourceType": "module"
+    },
+    "rules": {
+      "no-case-declarations": "off"
     }
   },
   "nyc": {
