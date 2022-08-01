@@ -7,7 +7,7 @@
     "rules": {
       "type": "object",
       "propertyNames": { "$ref": "OperationNames" },
-      "additionalProperties": {"$ref": "Rules"}
+      "additionalProperties": { "$ref": "Rules" }
     }
   },
   "required": ["rules"],

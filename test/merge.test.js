@@ -1,9 +1,9 @@
 'use strict';
 
-import {merge} from '../dist';
+import { merge } from '../dist';
 import test from 'ava';
 
-test('Two halves of the RFC example should merge to produce the full example', t => {
+test('Two halves of the RFC example should merge to produce the full example', (t) => {
   const policies = [
     {
       rules: {
@@ -11,19 +11,19 @@ test('Two halves of the RFC example should merge to produce the full example', t
           {
             'user.groups': {
               comparison: 'includes',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
         ],
         readData: [
           {
             'user.groups': {
               comparison: 'includes',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
-        ]
-      }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
+        ],
+      },
     },
     {
       rules: {
@@ -31,24 +31,27 @@ test('Two halves of the RFC example should merge to produce the full example', t
           {
             'user.groups': {
               comparison: 'includes',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
         ],
         readData: [
           {
             'user.groups': {
               comparison: 'superset',
-              value: ['1af3ed70-018b-46cc-ba41-7b731fcb182f', '1af3ed70-018b-46cc-ba41-7b731fcb182f']
+              value: [
+                '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+                '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+              ],
             },
             'resource.dataset': {
               comparison: 'equals',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
-        ]
-      }
-    }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
+        ],
+      },
+    },
   ];
 
   const expected = {
@@ -57,37 +60,40 @@ test('Two halves of the RFC example should merge to produce the full example', t
         {
           'user.groups': {
             comparison: 'includes',
-            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-          }
-        }
+            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+          },
+        },
       ],
       billingAdmin: [
         {
           'user.groups': {
             comparison: 'includes',
-            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-          }
-        }
+            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+          },
+        },
       ],
       readData: [
         {
           'user.groups': {
             comparison: 'includes',
-            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-          }
+            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+          },
         },
         {
           'user.groups': {
             comparison: 'superset',
-            value: ['1af3ed70-018b-46cc-ba41-7b731fcb182f', '1af3ed70-018b-46cc-ba41-7b731fcb182f']
+            value: [
+              '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+              '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            ],
           },
           'resource.dataset': {
             comparison: 'equals',
-            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-          }
-        }
-      ]
-    }
+            value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+          },
+        },
+      ],
+    },
   };
 
   const original = JSON.parse(JSON.stringify(policies));
@@ -98,7 +104,7 @@ test('Two halves of the RFC example should merge to produce the full example', t
   t.deepEqual(policies, original);
 });
 
-test('rules that are true should trump all others', t => {
+test('rules that are true should trump all others', (t) => {
   const policies = [
     {
       rules: {
@@ -107,11 +113,11 @@ test('rules that are true should trump all others', t => {
           {
             'user.groups': {
               comparison: 'includes',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
-        ]
-      }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
+        ],
+      },
     },
     {
       rules: {
@@ -119,26 +125,26 @@ test('rules that are true should trump all others', t => {
           {
             'user.groups': {
               comparison: 'includes',
-              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f'
-            }
-          }
+              value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            },
+          },
         ],
-        deleteData: true
-      }
-    }
+        deleteData: true,
+      },
+    },
   ];
 
   const expected = {
     rules: {
       readData: true,
-      deleteData: true
-    }
+      deleteData: true,
+    },
   };
 
   t.deepEqual(merge(policies), expected);
 });
 
-test('merging a single policy should produce the single policy', t => {
+test('merging a single policy should produce the single policy', (t) => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -149,13 +155,13 @@ test('merging a single policy should produce the single policy', t => {
       readData: true,
       updateData: true,
       deleteData: true,
-      downloadFile: true
-    }
+      downloadFile: true,
+    },
   };
 
   t.deepEqual(merge([policy]), policy);
 });
 
-test('merging nothing should produce a deny all policy', t => {
-  t.deepEqual(merge([]), {rules: {}});
+test('merging nothing should produce a deny all policy', (t) => {
+  t.deepEqual(merge([]), { rules: {} });
 });

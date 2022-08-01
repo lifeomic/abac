@@ -1,7 +1,7 @@
 import { policyRequiresAttribute } from '../dist';
 import test from 'ava';
 
-test('should return true when attribute is required', t => {
+test('should return true when attribute is required', (t) => {
   const policy = {
     rules: {
       accessAdmin: false,
@@ -10,23 +10,23 @@ test('should return true when attribute is required', t => {
         {
           'user.patients': {
             comparison: 'includes',
-            target: 'resource.subject'
-          }
+            target: 'resource.subject',
+          },
         },
         {
           'user.consents.*.tags': {
             comparison: 'superset',
-            target: 'resource.tags'
-          }
+            target: 'resource.tags',
+          },
         },
         {
-          'something': {
+          something: {
             comparison: 'equals',
-            target: 'other.value'
-          }
-        }
-      ]
-    }
+            target: 'other.value',
+          },
+        },
+      ],
+    },
   };
 
   t.true(policyRequiresAttribute(policy, 'user.patients'));

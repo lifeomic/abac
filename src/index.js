@@ -11,11 +11,12 @@ Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 
 /**
  * Validate a policy.
- * @param {object} policy - the policy to validate
+ *
+ * @param {object} policy the policy to validate
  * @returns {boolean} true iff the policy is valid
  * @throws Error if the policy is invalid
  */
-const validate = policy => {
+const validate = (policy) => {
   const valid = ajv.validate('Policy', policy);
 
   if (!valid) {
@@ -27,7 +28,8 @@ const validate = policy => {
 
 /**
  * Merge multiple policies into a single policy with the same effect.
- * @param {Array[object]} policies - array of policies to merge
+ *
+ * @param {Array[object]} policies array of policies to merge
  * @returns {object} the merged policy
  * @throws {Error} if any of the policies is invalid
  */
@@ -38,51 +40,38 @@ const merge = (policies) => {
     validate(policy);
     Object.entries(policy.rules).forEach(([operation, rules]) => {
       if (rules === true) {
-        // It is safe to ignore the injection attach here because the operation
-        // name has been validated by the policy schema before getting this far
-        // eslint-disable-next-line security/detect-object-injection
         result[operation] = true;
-
-      // It is safe to ignore the injection attach here because the operation
-      // name has been validated by the policy schema before getting this far
-      // eslint-disable-next-line security/detect-object-injection
       } else if (result[operation]) {
-        // It is safe to ignore the injection attach here because the operation
-        // name has been validated by the policy schema before getting this far
-        // eslint-disable-next-line security/detect-object-injection
         if (result[operation] !== true) {
-          // It is safe to ignore the injection attach here because the operation
-          // name has been validated by the policy schema before getting this far
-          // eslint-disable-next-line security/detect-object-injection
           result[operation].push(...rules);
         }
       } else {
-        // It is safe to ignore the injection attach here because the operation
-        // name has been validated by the policy schema before getting this far
-        // eslint-disable-next-line security/detect-object-injection
         result[operation] = [...rules];
       }
     });
   }
 
-  return {rules: result};
+  return { rules: result };
 };
 
 // returns an array of values for each instance of the attribute under the given privileges
 const extract = (policy, privileges, attribute) => {
   validate(policy);
-  const comparisons = Object.entries(policy.rules).map(([operation, rules]) => {
-    if (Array.isArray(rules) && privileges.includes(operation)) {
-      return rules.map(rule => rule[attribute]).filter(Boolean);
-    }
-  }).filter(Boolean);
+  const comparisons = Object.entries(policy.rules)
+    .map(([operation, rules]) => {
+      if (Array.isArray(rules) && privileges.includes(operation)) {
+        return rules.map((rule) => rule[attribute]).filter(Boolean);
+      }
+    })
+    .filter(Boolean);
   return comparisons.flat(1);
 };
 
 /**
  * Get a list of all values matching the path (including wildcards).
- * @param {object} attributes - attributes as nested objects
- * @param {array} path - array of path segments
+ *
+ * @param {object} attributes attributes as nested objects
+ * @param {array} path array of path segments
  */
 const getAttributeValues = (attributes, path) => {
   if (attributes === undefined || attributes === null) {
@@ -123,20 +112,20 @@ const getAttributeValues = (attributes, path) => {
 
 /**
  * Get the attribute value identified by path.
- * @param {object} attributes - attributes as nested objects
- * @param {string} path - string path (e.g. 'user.groups')
+ *
+ * @param {object} attributes attributes as nested objects
+ * @param {string} path string path (e.g. 'user.groups')
  */
 const getAttribute = (attributes, name) => {
   const path = name.split('.');
   return getAttributeValues(attributes, path)[0];
 };
 
-const getCompareValue = function (condition, attributes) {
+const getCompareValue = (condition, attributes) => {
   if ('target' in condition) {
     return getAttribute(attributes, condition.target);
-  } else {
-    return condition.value;
   }
+  return condition.value;
 };
 
 /**
@@ -172,19 +161,33 @@ const compare = (condition, value, attributes) => {
 
     case 'superset':
       if (compareValue === undefined) return undefined;
-      return Array.isArray(value) && Array.isArray(compareValue) && compareValue.every(x => value.includes(x));
+      return (
+        Array.isArray(value) &&
+        Array.isArray(compareValue) &&
+        compareValue.every((x) => value.includes(x))
+      );
 
     case 'subset':
       if (compareValue === undefined) return undefined;
-      return Array.isArray(value) && Array.isArray(compareValue) && value.every(x => compareValue.includes(x));
+      return (
+        Array.isArray(value) &&
+        Array.isArray(compareValue) &&
+        value.every((x) => compareValue.includes(x))
+      );
 
     case 'startsWith':
       if (compareValue === undefined) return undefined;
-      return (typeof value === 'string' || value instanceof String) && value.startsWith(compareValue);
+      return (
+        (typeof value === 'string' || value instanceof String) &&
+        value.startsWith(compareValue)
+      );
 
     case 'endsWith':
       if (compareValue === undefined) return undefined;
-      return (typeof value === 'string' || value instanceof String) && value.endsWith(compareValue);
+      return (
+        (typeof value === 'string' || value instanceof String) &&
+        value.endsWith(compareValue)
+      );
 
     default:
       // for unknown comparison types simply deny access:
@@ -217,9 +220,8 @@ const reduceRule = (rule, attributes) => {
 
   if (Object.keys(result).length === 0) {
     return true;
-  } else {
-    return result;
   }
+  return result;
 };
 
 const reduceRules = (rules, attributes) => {
@@ -246,8 +248,9 @@ const reduceRules = (rules, attributes) => {
  * allow the operations.  This function's intended use is for
  * client applications that need a simple check to disable
  * or annotate UI elements.
- * @param {object} policy - the policy to evaluate
- * @param {object} attributes - the attributes to use for the evaluation
+ *
+ * @param {object} policy the policy to evaluate
+ * @param {object} attributes the attributes to use for the evaluation
  * @returns {object} the policy reduced to conditions involving attributes not not given
  * @throws {Error} if the policy is invalid
  */
@@ -258,27 +261,27 @@ const reduce = (policy, attributes) => {
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     rules = reduceRules(rules, attributes);
     if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
-      // It is safe to ignore the injection attach here because the operation name
-      // comes from the policy which has been validated already.
-      // eslint-disable-next-line security/detect-object-injection
       result[operation] = rules;
     }
   });
 
-  return {rules: result};
+  return { rules: result };
 };
 
 /**
  * @deprecated use `reduce(...)` instead
  */
-const reduceSync = deprecate(reduce,
-  '@lifeomic/abac reduceSync(...) is deprecated. Use reduce(...) instead.');
+const reduceSync = deprecate(
+  reduce,
+  '@lifeomic/abac reduceSync(...) is deprecated. Use reduce(...) instead.'
+);
 
 /**
  * Check whether the given policy allows the operation with the given attributes.
- * @param {string} operation - the requested operation
- * @param {object} policy - the policy to use to check access
- * @param {object} attributes - the attributes to use to check access
+ *
+ * @param {string} operation the requested operation
+ * @param {object} policy the policy to use to check access
+ * @param {object} attributes the attributes to use to check access
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
@@ -290,10 +293,8 @@ const enforce = (operation, policy, attributes) => {
     return false;
   }
 
-  // It is safe to ignore the injection attach here because the operation name has been validated
-  // against the allowed operation names
-  // eslint-disable-next-line security/detect-object-injection
-  const rules = (policy.rules && policy.rules[operation]) ? policy.rules[operation] : [];
+  const rules =
+    policy.rules && policy.rules[operation] ? policy.rules[operation] : [];
   return reduceRules(rules, attributes) === true;
 };
 
@@ -306,9 +307,9 @@ const enforce = (operation, policy, attributes) => {
  * `true` for the policy evaluation (not safe for server-side
  * enforcement of ABAC policy!).
  *
- * @param {string} operation - the requested operation
- * @param {object} policy - the policy to use to check access
- * @param {object} attributes - the attributes to use to check access
+ * @param {string} operation the requested operation
+ * @param {object} policy the policy to use to check access
+ * @param {object} attributes the attributes to use to check access
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
@@ -320,10 +321,8 @@ const enforceLenient = (operation, policy, attributes) => {
     return false;
   }
 
-  // It is safe to ignore the injection attach here because the operation name has been validated
-  // against the allowed operation names
-  // eslint-disable-next-line security/detect-object-injection
-  const rules = (policy.rules && policy.rules[operation]) ? policy.rules[operation] : [];
+  const rules =
+    policy.rules && policy.rules[operation] ? policy.rules[operation] : [];
   const reducedRules = reduceRules(rules, attributes);
   return reducedRules && (reducedRules === true || reducedRules.length > 0);
 };
@@ -331,15 +330,18 @@ const enforceLenient = (operation, policy, attributes) => {
 /**
  * @deprecated use `enforceLenient(...)` instead
  */
-const enforceSync = deprecate(enforceLenient,
-  '@lifeomic/abac enforceSync(...) is deprecated. Use enforceLenient(...) instead.');
+const enforceSync = deprecate(
+  enforceLenient,
+  '@lifeomic/abac enforceSync(...) is deprecated. Use enforceLenient(...) instead.'
+);
 
 /**
  * Check whether the given policy allows one of a list of operations
  * with the given attributes.
- * @param {string[]} operations - the requested operations
- * @param {object} policy - the policy to use to check access
- * @param {object} attributes - the attributes to use to check access
+ *
+ * @param {string[]} operations the requested operations
+ * @param {object} policy the policy to use to check access
+ * @param {object} attributes the attributes to use to check access
  * @returns {boolean|string} - the first allowed operation or false
  * @throws {Error} Error if the policy is invalid
  */
@@ -356,15 +358,15 @@ const enforceAny = (operations, policy, attributes) => {
 /**
  * Return the list of privileges that the given policy
  * allows against the given attributes.
- * @param {object} policy - the policy to use to check access
- * @param {object} attributes - the attributes to use to check access
+ *
+ * @param {object} policy the policy to use to check access
+ * @param {object} attributes the attributes to use to check access
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
 const privileges = (policy, attributes) => {
   const rules = reduce(policy, attributes).rules;
-  return Object
-    .entries(rules)
+  return Object.entries(rules)
     .filter(([, rules]) => rules === true)
     .map(([privilege]) => privilege);
 };
@@ -374,23 +376,24 @@ const privileges = (policy, attributes) => {
  * might allow against the given attributes. This function's intended use is for
  * client applications that need a simple check to disable
  * or annotate UI elements. Not safe for server-side!
- * @param {object} policy - the policy to use to check access
- * @param {object} attributes - the attributes to use to check access
+ *
+ * @param {object} policy the policy to use to check access
+ * @param {object} attributes the attributes to use to check access
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
 const privilegesLenient = (policy, attributes) => {
   const rules = reduce(policy, attributes).rules;
-  return Object
-    .entries(rules)
-    .map(([privilege]) => privilege);
+  return Object.entries(rules).map(([privilege]) => privilege);
 };
 
 /**
  * @deprecated use `privilegesLenient(...)` instead
  */
-const privilegesSync = deprecate(privilegesLenient,
-  '@lifeomic/abac privilegesSync(...) is deprecated. Use privilegesLenient(...) instead.');
+const privilegesSync = deprecate(
+  privilegesLenient,
+  '@lifeomic/abac privilegesSync(...) is deprecated. Use privilegesLenient(...) instead.'
+);
 
 /**
  * Return true iff left is a path prefix of right
@@ -417,24 +420,23 @@ const isPathPrefix = (left, right) => {
  * for a given policy. This may be useful for determining if additional metadata
  * should be fetched before enforcing a policy.
  *
- * @param {object} policy - the policy to check
- * @param {string} attribute - the attribute path, e.g. 'user.patients'
+ * @param {object} policy the policy to check
+ * @param {string} attribute the attribute path, e.g. 'user.patients'
  * @returns {boolean} True if the attribute is in the rules list
  */
 const policyRequiresAttribute = (policy, attribute) => {
   const rules = Object.values(policy.rules)
-    .filter(rule => Array.isArray(rule))
+    .filter((rule) => Array.isArray(rule))
     .reduce((left, right) => left.concat(right), []);
 
   for (const rule of rules) {
     for (const key in rule) {
       if (isPathPrefix(attribute, key)) {
         return true;
-      } else {
-        const target = rule[key].target;
-        if (target && isPathPrefix(attribute, target)) {
-          return true;
-        }
+      }
+      const target = rule[key].target;
+      if (target && isPathPrefix(attribute, target)) {
+        return true;
       }
     }
   }
@@ -454,5 +456,5 @@ export {
   privileges,
   privilegesLenient,
   privilegesSync /* deprecated */,
-  policyRequiresAttribute
+  policyRequiresAttribute,
 };

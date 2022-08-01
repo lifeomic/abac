@@ -5,7 +5,7 @@
   "oneOf": [
     {
       "type": "array",
-      "items" : {
+      "items": {
         "$ref": "Rule"
       },
       "minItems": 1
