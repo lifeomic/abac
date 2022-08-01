@@ -1,9 +1,9 @@
 'use strict';
 
-import {privileges, privilegesLenient} from '../dist';
+import { privileges, privilegesLenient } from '../dist';
 import test from 'ava';
 
-test('privileges should work', t => {
+test('privileges should work', (t) => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -12,34 +12,38 @@ test('privileges should work', t => {
         {
           'resource.dataset': {
             comparison: 'equals',
-            value: 'project'
-          }
-        }
+            value: 'project',
+          },
+        },
       ],
       updateData: [
         {
           'resource.ownerId': {
             comparison: 'equals',
-            target: 'user.id'
-          }
-        }
-      ]
-    }
+            target: 'user.id',
+          },
+        },
+      ],
+    },
   };
 
   t.deepEqual(privileges(policy), ['accessAdmin', 'readData']);
   t.deepEqual(
-    privileges(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
-    ['accessAdmin', 'readData']);
-  t.deepEqual(
-    privileges(policy, {resource: {dataset: 'project'}}),
-    ['accessAdmin', 'readData', 'deleteData']);
-  t.deepEqual(
-    privileges(policy, {resource: {dataset: 'project2'}}),
-    ['accessAdmin', 'readData']);
+    privileges(policy, { resource: { ownerId: 'john' }, user: { id: 'jane' } }),
+    ['accessAdmin', 'readData']
+  );
+  t.deepEqual(privileges(policy, { resource: { dataset: 'project' } }), [
+    'accessAdmin',
+    'readData',
+    'deleteData',
+  ]);
+  t.deepEqual(privileges(policy, { resource: { dataset: 'project2' } }), [
+    'accessAdmin',
+    'readData',
+  ]);
 });
 
-test('privilegesLenient should work', t => {
+test('privilegesLenient should work', (t) => {
   const policy = {
     rules: {
       accessAdmin: true,
@@ -48,36 +52,56 @@ test('privilegesLenient should work', t => {
         {
           'resource.dataset': {
             comparison: 'equals',
-            value: 'project'
-          }
-        }
+            value: 'project',
+          },
+        },
       ],
       updateData: [
         {
           'resource.ownerId': {
             comparison: 'equals',
-            target: 'user.id'
-          }
-        }
-      ]
-    }
+            target: 'user.id',
+          },
+        },
+      ],
+    },
   };
 
   // privilegesLenient does the best it can given incomplete information
   // and is permissive:
-  t.deepEqual(privilegesLenient(policy), ['accessAdmin', 'readData', 'deleteData', 'updateData']);
+  t.deepEqual(privilegesLenient(policy), [
+    'accessAdmin',
+    'readData',
+    'deleteData',
+    'updateData',
+  ]);
   t.deepEqual(
-    privilegesLenient(policy, {resource: {ownerId: 'john'}, user: {id: 'jane'}}),
-    ['accessAdmin', 'readData', 'deleteData']);
-  t.deepEqual(
-    privilegesLenient(policy, {resource: {dataset: 'project'}}),
-    ['accessAdmin', 'readData', 'deleteData', 'updateData']);
+    privilegesLenient(policy, {
+      resource: { ownerId: 'john' },
+      user: { id: 'jane' },
+    }),
+    ['accessAdmin', 'readData', 'deleteData']
+  );
+  t.deepEqual(privilegesLenient(policy, { resource: { dataset: 'project' } }), [
+    'accessAdmin',
+    'readData',
+    'deleteData',
+    'updateData',
+  ]);
 
   // given full information, privilegesLenient gives correct answers:
   t.deepEqual(
-    privilegesLenient(policy, {resource: {dataset: 'project', ownerId: 'john'}, user: {id: 'john'}}),
-    ['accessAdmin', 'readData', 'deleteData', 'updateData']);
+    privilegesLenient(policy, {
+      resource: { dataset: 'project', ownerId: 'john' },
+      user: { id: 'john' },
+    }),
+    ['accessAdmin', 'readData', 'deleteData', 'updateData']
+  );
   t.deepEqual(
-    privilegesLenient(policy, {resource: {dataset: 'project2', ownerId: 'john'}, user: {id: 'jane'}}),
-    ['accessAdmin', 'readData']);
+    privilegesLenient(policy, {
+      resource: { dataset: 'project2', ownerId: 'john' },
+      user: { id: 'jane' },
+    }),
+    ['accessAdmin', 'readData']
+  );
 });

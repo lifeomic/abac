@@ -5,5 +5,5 @@ module.exports = {
   Policy: require('./Policy.json'),
   Rule: require('./Rule.json'),
   Rules: require('./Rules.json'),
-  OperationNames: require('./OperationNames.json')
+  OperationNames: require('./OperationNames.json'),
 };
