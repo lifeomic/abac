@@ -1052,3 +1052,261 @@ test('rules can use endsWith operator with with target value', (t) => {
     'enforce string'
   );
 });
+
+test('rules can use notIncludes operator with value', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'patient.sauces': {
+            comparison: 'notIncludes',
+            value: 'forbidden-sauce',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { sauces: ['ketchup', 'mustard'] },
+    }),
+    'returns true when the value is not included'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { sauces: ['ketchup', 'forbidden-sauce'] },
+    }),
+    'returns false when the value is included'
+  );
+
+  t.false(
+    enforce(
+      'readData',
+      {
+        rules: {
+          readData: [
+            {
+              'patient.sauces': {
+                comparison: 'notIncludes',
+                value: undefined,
+              },
+            },
+          ],
+        },
+      },
+      {
+        patient: { sauces: ['ketchup', 'forbidden-sauce'] },
+      }
+    ),
+    'returns false when the value is undefined'
+  );
+});
+
+test('rules can use notIncludes operator with target', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'resource.sauces': {
+            comparison: 'notIncludes',
+            target: 'patient.favoriteSauce',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        sauces: ['mustard', 'mayo'],
+      },
+    }),
+    'returns true when the target is not included'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        sauces: ['mustard', 'mayo', 'ketchup'],
+      },
+    }),
+    'returns false when the target is included'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        sauces: undefined,
+      },
+    }),
+    'returns false when the target is undefined'
+  );
+});
+
+test('rules can use prefixOf operator with value', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'patient.favoriteSauce': {
+            comparison: 'prefixOf',
+            value: 'honey-mustard',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'honey' },
+    }),
+    'returns true when the prop value is a prefix of the value'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ranch' },
+    }),
+    'returns false when the prop value is not a prefix of the value'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: undefined },
+    }),
+    'returns false when the prop value is undefined'
+  );
+});
+
+test('rules can use prefixOf operator with target', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'patient.favoriteSauce': {
+            comparison: 'prefixOf',
+            target: 'resource.secretSauce',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'honey-mayo' },
+      resource: {
+        secretSauce: 'honey-mayo-spicy',
+      },
+    }),
+    'returns true when the prop value is a prefix of the target'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        secretSauce: 'honey-mayo-spicy',
+      },
+    }),
+    'returns false when the prop value is not a prefix of the target'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        secretSauce: undefined,
+      },
+    }),
+    'returns false when the target is undefined'
+  );
+});
+
+test('rules can use suffixOf operator with value', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'patient.favoriteSauce': {
+            comparison: 'suffixOf',
+            value: 'honey-mustard',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'mustard' },
+    }),
+    'returns true when the prop value is a suffix of the value'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ranch' },
+    }),
+    'returns false when the prop value is not a prefix of the value'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: undefined },
+    }),
+    'returns false when the value is undefined'
+  );
+});
+
+test('rules can use suffixOf operator with target', (t) => {
+  const policy = {
+    rules: {
+      readData: [
+        {
+          'patient.favoriteSauce': {
+            comparison: 'suffixOf',
+            target: 'resource.secretSauce',
+          },
+        },
+      ],
+    },
+  };
+
+  t.true(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'mayo' },
+      resource: {
+        secretSauce: 'honey-mayo',
+      },
+    }),
+    'returns true when the prop value is a suffix of the target'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        secretSauce: 'honey-mayo',
+      },
+    }),
+    'returns false when the prop value is not a suffix of the target'
+  );
+
+  t.false(
+    enforce('readData', policy, {
+      patient: { favoriteSauce: 'ketchup' },
+      resource: {
+        secretSauce: undefined,
+      },
+    }),
+    'returns false when the target is undefined'
+  );
+});

@@ -9,6 +9,9 @@ const ajv = new Ajv();
 
 Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 
+const isString = (value) =>
+  typeof value === 'string' || value instanceof String;
+
 /**
  * Validate a policy.
  *
@@ -159,6 +162,11 @@ const compare = (condition, value, attributes) => {
       if (compareValue === undefined) return undefined;
       return Array.isArray(compareValue) && !compareValue.includes(value);
 
+    case 'notIncludes':
+      // No undefined check for compareValue here since AJV catches that
+      // and throws error.
+      return Array.isArray(value) && !value.includes(compareValue);
+
     case 'superset':
       if (compareValue === undefined) return undefined;
       return (
@@ -177,16 +185,26 @@ const compare = (condition, value, attributes) => {
 
     case 'startsWith':
       if (compareValue === undefined) return undefined;
+      return isString(value) && value.startsWith(compareValue);
+
+    case 'prefixOf':
+      if (compareValue === undefined) return undefined;
       return (
-        (typeof value === 'string' || value instanceof String) &&
-        value.startsWith(compareValue)
+        isString(value) &&
+        isString(compareValue) &&
+        compareValue.startsWith(value)
       );
 
     case 'endsWith':
       if (compareValue === undefined) return undefined;
+      return isString(value) && value.endsWith(compareValue);
+
+    case 'suffixOf':
+      if (compareValue === undefined) return undefined;
       return (
-        (typeof value === 'string' || value instanceof String) &&
-        value.endsWith(compareValue)
+        isString(value) &&
+        isString(compareValue) &&
+        compareValue.endsWith(value)
       );
 
     default:

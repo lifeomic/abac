@@ -1,5 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ValidTargetString": {
+      "type": "string",
+      "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
+    }
+  },
   "title": "Comparison",
   "description": "An individual ABAC attribute comparison",
   "type": "object",
@@ -24,7 +30,7 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["includes", "equals", "notEquals"]
+          "enum": ["includes", "notIncludes", "equals", "notEquals"]
         },
         "value": {
           "type": ["number", "string"]
@@ -37,14 +43,13 @@
       "properties": {
         "comparison": {
           "type": "string",
-          "enum": ["startsWith", "endsWith"]
+          "enum": ["startsWith", "prefixOf", "suffixOf", "endsWith"]
         },
         "value": {
           "type": ["string"]
         },
         "target": {
-          "type": "string",
-          "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
+          "$ref": "#/definitions/ValidTargetString"
         }
       },
       "required": ["comparison"],
@@ -73,13 +78,13 @@
             "in",
             "equals",
             "includes",
+            "notIncludes",
             "notEquals",
             "notIn"
           ]
         },
         "target": {
-          "type": "string",
-          "pattern": "^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$"
+          "$ref": "#/definitions/ValidTargetString"
         }
       },
       "required": ["comparison", "target"],
@@ -96,10 +101,13 @@
               "in",
               "equals",
               "includes",
+              "notIncludes",
               "notEquals",
               "notIn",
               "startsWith",
-              "endsWith"
+              "prefixOf",
+              "endsWith",
+              "suffixOf"
             ]
           }
         }
