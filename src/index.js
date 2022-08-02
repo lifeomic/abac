@@ -9,8 +9,46 @@ const ajv = new Ajv();
 
 Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 
+const COMPARISON_REVERSION_MAP = {
+  endsWith: 'suffixOf',
+  equals: 'equals',
+  exists: 'exists',
+  in: 'includes',
+  includes: 'in',
+  notEquals: 'notEquals',
+  notIn: 'notIncludes',
+  notIncludes: 'notIn',
+  prefixOf: 'startsWith',
+  startsWith: 'prefixOf',
+  subset: 'superset',
+  suffixOf: 'endsWith',
+  superset: 'subset',
+};
+
+const USER_CUSTOM_ATTRIBUTES_PATH = 'user.customAttributes';
+
 const isString = (value) =>
   typeof value === 'string' || value instanceof String;
+
+const reverseCondition = (conditionName, condition) => {
+  // no-op when there is no target.
+  if (!condition.target) {
+    return {
+      conditionName,
+      condition,
+    };
+  }
+
+  const reversedComparison = COMPARISON_REVERSION_MAP[condition.comparison];
+
+  return {
+    conditionName: condition.target,
+    condition: {
+      comparison: reversedComparison,
+      target: conditionName,
+    },
+  };
+};
 
 /**
  * Validate a policy.
@@ -138,6 +176,7 @@ const getCompareValue = (condition, attributes) => {
  */
 const compare = (condition, value, attributes) => {
   const compareValue = getCompareValue(condition, attributes);
+
   switch (condition.comparison) {
     case 'includes':
       if (compareValue === undefined) return undefined;
@@ -216,16 +255,44 @@ const compare = (condition, value, attributes) => {
 const reduceRule = (rule, attributes) => {
   const result = {};
 
-  for (const [name, condition] of Object.entries(rule)) {
-    const values = getAttributeValues(attributes, name.split('.'));
+  for (let [conditionName, condition] of Object.entries(rule)) {
+    // When a custom attribute is referenced in a rule's key position, we need
+    // to reverse the condition so we can correctly perform in-line value
+    // replacement (replacement only happens when the key position is known).
+    if (conditionName.startsWith(USER_CUSTOM_ATTRIBUTES_PATH)) {
+      const { conditionName: newConditionName, condition: newCondition } =
+        reverseCondition(conditionName, condition);
+      conditionName = newConditionName;
+      condition = newCondition;
+    }
+
+    // We support custom user attributes and replace them with in-line values
+    // when they are already present in the policy.
+    if (
+      condition.target &&
+      condition.target.startsWith(USER_CUSTOM_ATTRIBUTES_PATH)
+    ) {
+      const [userTargetCustomAttributeValue] = getAttributeValues(
+        attributes,
+        condition.target.split('.')
+      );
+
+      if (userTargetCustomAttributeValue) {
+        condition.value = userTargetCustomAttributeValue;
+        delete condition.target;
+      }
+    }
+
+    const values = getAttributeValues(attributes, conditionName.split('.'));
 
     if (values.length === 0) {
-      result[name] = condition;
+      result[conditionName] = condition;
     } else {
       for (const value of values) {
         const compareResult = compare(condition, value, attributes);
+
         if (compareResult === undefined) {
-          result[name] = condition;
+          result[conditionName] = condition;
           break;
         } else {
           if (compareResult === false) {
@@ -239,6 +306,7 @@ const reduceRule = (rule, attributes) => {
   if (Object.keys(result).length === 0) {
     return true;
   }
+
   return result;
 };
 
@@ -251,6 +319,7 @@ const reduceRules = (rules, attributes) => {
 
   for (const rule of rules) {
     const reducedRule = reduceRule(rule, attributes);
+
     if (reducedRule === true) {
       return true;
     } else if (reducedRule) {
@@ -263,21 +332,23 @@ const reduceRules = (rules, attributes) => {
 
 /**
  * Performs a synchronous reduction for whether the given policy might
- * allow the operations.  This function's intended use is for
- * client applications that need a simple check to disable
- * or annotate UI elements.
+ * allow the operations. This function's intended use is for client applications
+ * that need a simple check to disable or annotate UI elements.
  *
  * @param {object} policy the policy to evaluate
  * @param {object} attributes the attributes to use for the evaluation
- * @returns {object} the policy reduced to conditions involving attributes not not given
+ * @returns {object} the policy reduced to conditions involving attributes not
+ * not given
  * @throws {Error} if the policy is invalid
  */
 const reduce = (policy, attributes) => {
   const result = {};
 
   validate(policy);
+
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     rules = reduceRules(rules, attributes);
+
     if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
       result[operation] = rules;
     }
