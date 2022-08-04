@@ -418,6 +418,10 @@ test('when custom user "target" attributes are known, they are replaced with in-
             comparison: 'notEquals',
             target: 'user.customAttributes.forbiddenOrgId',
           },
+          'resource.isPastDue': {
+            comparison: 'notEquals',
+            target: 'user.customAttributes.isPastDue',
+          },
         },
         {
           'resource.secret': {
@@ -445,6 +449,10 @@ test('when custom user "target" attributes are known, they are replaced with in-
             comparison: 'notEquals',
             value: 'e-corp',
           },
+          'resource.isPastDue': {
+            comparison: 'notEquals',
+            value: true,
+          },
         },
         {
           'resource.secret': {
@@ -467,6 +475,7 @@ test('when custom user "target" attributes are known, they are replaced with in-
           myCustomPatients: ['patient-one', 'patient-two', 'patient-three'],
           myCustomSecret: 'secret-sauce',
           forbiddenOrgId: 'e-corp',
+          isPastDue: true,
         },
       },
       resource: { ownerId: 'testuser' },
