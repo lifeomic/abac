@@ -189,7 +189,6 @@ const getUserCustomConditions = (resourceName) => {
     },
     'user.customAttributes.isActive': {
       comparison: 'exists',
-      target: `${resourceName}.isActive`,
     },
     'user.customAttributes.patient': {
       comparison: 'in',
@@ -259,9 +258,10 @@ test('reverses conditions with custom user attributes as keys', (t) => {
             comparison: 'equals',
             target: 'user.customAttributes.id',
           },
-          'resource.isActive': {
+          // 'exists' can't be used with a target, so assert that nothing
+          // changed.
+          'user.customAttributes.isActive': {
             comparison: 'exists',
-            target: 'user.customAttributes.isActive',
           },
           'resource.patients': {
             comparison: 'includes',

@@ -31,8 +31,8 @@ const isString = (value) =>
   typeof value === 'string' || value instanceof String;
 
 const reverseCondition = (conditionName, condition) => {
-  // no-op when there is no target.
-  if (!condition.target) {
+  // no-op when there is no target or when comparison is 'exists'.
+  if (!condition.target || condition.comparison === 'exists') {
     return {
       conditionName,
       condition,
@@ -257,7 +257,7 @@ const reduceRule = (rule, attributes) => {
 
   for (let [conditionName, condition] of Object.entries(rule)) {
     // When a custom attribute is referenced in a rule's key position, we need
-    // to reverse the condition so we can correctly perform in-line value
+    // to revert the condition so we can correctly perform in-line value
     // replacement (replacement only happens when the key position is known).
     if (conditionName.startsWith(USER_CUSTOM_ATTRIBUTES_PATH)) {
       const { conditionName: newConditionName, condition: newCondition } =
