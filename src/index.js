@@ -41,14 +41,8 @@ const maybeReverseCondition = (pathToCheck, condition, attributes) => {
     return noOp;
   }
 
-  const [originalPathToCheckValue] = getAttributeValues(
-    attributes,
-    pathToCheck.split('.')
-  );
-  const [originalTargetValue] = getAttributeValues(
-    attributes,
-    condition.target.split('.')
-  );
+  const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
+  const originalTargetValue = getAttribute(attributes, condition.target);
 
   if (originalPathToCheckValue && !originalTargetValue) {
     return {
@@ -175,20 +169,13 @@ const getAttribute = (attributes, name) => {
   return getAttributeValues(attributes, path)[0];
 };
 
-const getCompareValue = (condition, attributes) => {
-  if ('target' in condition) {
-    return getAttribute(attributes, condition.target);
-  }
-  return condition.value;
-};
-
 /**
  * @returns `true` if the comparision matches, `false` if there is a mismatch,
  *          and `undefined` if the target value is not known to compute the
  *          result
  */
-const compare = (condition, value, attributes) => {
-  const compareValue = getCompareValue(condition, attributes);
+const compare = (condition, value) => {
+  const compareValue = condition.value;
 
   switch (condition.comparison) {
     case 'includes':
@@ -277,10 +264,7 @@ const reduceRule = (rule, attributes) => {
     // When we already know the value of the target, we replace it with an
     // in-line value.
     if (condition.target) {
-      const [inLineTargetValue] = getAttributeValues(
-        attributes,
-        condition.target.split('.')
-      );
+      const inLineTargetValue = getAttribute(attributes, condition.target);
 
       if (inLineTargetValue) {
         condition.value = inLineTargetValue;
@@ -294,7 +278,9 @@ const reduceRule = (rule, attributes) => {
       result[pathToCheck] = condition;
     } else {
       for (const value of values) {
-        const compareResult = compare(condition, value, attributes);
+        // At this point, all target props in the condition should have been
+        // replaced by the actual value.
+        const compareResult = compare(condition, value);
 
         if (compareResult === undefined) {
           result[pathToCheck] = condition;
