@@ -258,14 +258,13 @@ const reduceRule = (rule, attributes) => {
       attributes,
       pathToCheck.split('.')
     );
-    const originalTarget = condition.target;
-    const [originalTargetValue] = originalTarget
+    const [originalTargetValue] = condition.target
       ? getAttributeValues(attributes, condition.target.split('.'))
       : [null];
 
     // We reverse conditions when we have a known "key" value and an unknown
     // "target" value.
-    if (originalPathToCheckValue && originalTarget && !originalTargetValue) {
+    if (originalPathToCheckValue && condition.target && !originalTargetValue) {
       const { pathToCheck: newPathToCheck, condition: newCondition } =
         reverseCondition(pathToCheck, condition);
       pathToCheck = newPathToCheck;
