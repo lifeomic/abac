@@ -1,6 +1,6 @@
 'use strict';
 
-import { reduce } from '../dist';
+import { reduce, COMPARISON_REVERSION_MAP } from '../dist';
 import test from 'ava';
 
 test('RFC example should reduce properly', (t) => {
@@ -170,7 +170,15 @@ const assertComparisonNotReduced = (t, comparison, value = 'test') => {
   };
   const expectedPolicy = {
     rules: {
-      readData: originalPolicy.rules.readData,
+      readData: [
+        // Inverted but not reduced.
+        {
+          'circle.owner.id': {
+            comparison: COMPARISON_REVERSION_MAP[comparison],
+            value,
+          },
+        },
+      ],
     },
   };
 

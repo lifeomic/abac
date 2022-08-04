@@ -9,7 +9,7 @@ const ajv = new Ajv();
 
 Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 
-const COMPARISON_REVERSION_MAP = {
+export const COMPARISON_REVERSION_MAP = {
   endsWith: 'suffixOf',
   equals: 'equals',
   exists: 'exists',
