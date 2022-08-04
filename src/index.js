@@ -170,44 +170,34 @@ const getAttribute = (attributes, name) => {
 };
 
 /**
- * @returns `true` if the comparision matches, `false` if there is a mismatch,
- *          and `undefined` if the target value is not known to compute the
- *          result
+ * @returns `true` if the comparision matches, `false` if there is a mismatch.
  */
 const compare = (condition, value) => {
   const compareValue = condition.value;
 
   switch (condition.comparison) {
     case 'includes':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(value) && value.includes(compareValue);
 
     case 'in':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(compareValue) && compareValue.includes(value);
 
     case 'equals':
-      if (compareValue === undefined) return undefined;
       return equals(value, compareValue);
 
     case 'exists':
       return value !== undefined;
 
     case 'notEquals':
-      if (compareValue === undefined) return undefined;
       return !equals(value, compareValue);
 
     case 'notIn':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(compareValue) && !compareValue.includes(value);
 
     case 'notIncludes':
-      // No undefined check for compareValue here since AJV catches that
-      // and throws error.
       return Array.isArray(value) && !value.includes(compareValue);
 
     case 'superset':
-      if (compareValue === undefined) return undefined;
       return (
         Array.isArray(value) &&
         Array.isArray(compareValue) &&
@@ -215,7 +205,6 @@ const compare = (condition, value) => {
       );
 
     case 'subset':
-      if (compareValue === undefined) return undefined;
       return (
         Array.isArray(value) &&
         Array.isArray(compareValue) &&
@@ -223,11 +212,9 @@ const compare = (condition, value) => {
       );
 
     case 'startsWith':
-      if (compareValue === undefined) return undefined;
       return isString(value) && value.startsWith(compareValue);
 
     case 'prefixOf':
-      if (compareValue === undefined) return undefined;
       return (
         isString(value) &&
         isString(compareValue) &&
@@ -235,11 +222,9 @@ const compare = (condition, value) => {
       );
 
     case 'endsWith':
-      if (compareValue === undefined) return undefined;
       return isString(value) && value.endsWith(compareValue);
 
     case 'suffixOf':
-      if (compareValue === undefined) return undefined;
       return (
         isString(value) &&
         isString(compareValue) &&
@@ -279,16 +264,12 @@ const reduceRule = (rule, attributes) => {
     } else {
       for (const value of values) {
         // At this point, all target props in the condition should have been
-        // replaced by the actual value.
+        // replaced by the actual value. "condition.value" and the resulting
+        // "compareResult" should never be undefined at this point.
         const compareResult = compare(condition, value);
 
-        if (compareResult === undefined) {
-          result[pathToCheck] = condition;
-          break;
-        } else {
-          if (compareResult === false) {
-            return false;
-          }
+        if (compareResult === false) {
+          return false;
         }
       }
     }
