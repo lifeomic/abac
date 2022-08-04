@@ -25,6 +25,8 @@ export const COMPARISON_REVERSION_MAP = {
   superset: 'subset',
 };
 
+const TARGETLESS_COMPARISON_OPERATORS = ['exists'];
+
 const isString = (value) =>
   typeof value === 'string' || value instanceof String;
 
@@ -36,7 +38,10 @@ const maybeReverseCondition = (pathToCheck, condition, attributes) => {
     condition,
   };
 
-  if (!condition.target || condition.comparison === 'exists') {
+  if (
+    !condition.target ||
+    TARGETLESS_COMPARISON_OPERATORS.includes(condition.comparison)
+  ) {
     return noOp;
   }
 
