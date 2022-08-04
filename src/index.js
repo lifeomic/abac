@@ -13,7 +13,6 @@ Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 export const COMPARISON_REVERSION_MAP = {
   endsWith: 'suffixOf',
   equals: 'equals',
-  exists: 'exists',
   in: 'includes',
   includes: 'in',
   notEquals: 'notEquals',
@@ -240,7 +239,7 @@ const compare = (condition, value) => {
 const reduceRule = (rule, attributes) => {
   const result = {};
 
-  for (let [pathToCheck, condition] of Object.entries(rule)) {
+  for (let [pathToCheck, condition] of Object.entries(cloneDeep(rule))) {
     const { pathToCheck: newPathToCheck, condition: newCondition } =
       maybeReverseCondition(pathToCheck, condition, attributes);
     pathToCheck = newPathToCheck;
