@@ -28,24 +28,38 @@ export const COMPARISON_REVERSION_MAP = {
 const isString = (value) =>
   typeof value === 'string' || value instanceof String;
 
-const reverseCondition = (pathToCheck, condition) => {
-  // no-op when there is no target or when comparison is 'exists'.
+// We reverse conditions when we have a known "key" value and an unknown
+// "target" value.
+const maybeReverseCondition = (pathToCheck, condition, attributes) => {
+  const noOp = {
+    pathToCheck,
+    condition,
+  };
+
   if (!condition.target || condition.comparison === 'exists') {
+    return noOp;
+  }
+
+  const [originalPathToCheckValue] = getAttributeValues(
+    attributes,
+    pathToCheck.split('.')
+  );
+  const [originalTargetValue] = getAttributeValues(
+    attributes,
+    condition.target.split('.')
+  );
+
+  if (originalPathToCheckValue && !originalTargetValue) {
     return {
-      pathToCheck,
-      condition,
+      pathToCheck: condition.target,
+      condition: {
+        comparison: COMPARISON_REVERSION_MAP[condition.comparison],
+        target: pathToCheck,
+      },
     };
   }
 
-  const reversedComparison = COMPARISON_REVERSION_MAP[condition.comparison];
-
-  return {
-    pathToCheck: condition.target,
-    condition: {
-      comparison: reversedComparison,
-      target: pathToCheck,
-    },
-  };
+  return noOp;
 };
 
 /**
@@ -254,22 +268,10 @@ const reduceRule = (rule, attributes) => {
   const result = {};
 
   for (let [pathToCheck, condition] of Object.entries(rule)) {
-    const [originalPathToCheckValue] = getAttributeValues(
-      attributes,
-      pathToCheck.split('.')
-    );
-    const [originalTargetValue] = condition.target
-      ? getAttributeValues(attributes, condition.target.split('.'))
-      : [null];
-
-    // We reverse conditions when we have a known "key" value and an unknown
-    // "target" value.
-    if (originalPathToCheckValue && condition.target && !originalTargetValue) {
-      const { pathToCheck: newPathToCheck, condition: newCondition } =
-        reverseCondition(pathToCheck, condition);
-      pathToCheck = newPathToCheck;
-      condition = newCondition;
-    }
+    const { pathToCheck: newPathToCheck, condition: newCondition } =
+      maybeReverseCondition(pathToCheck, condition, attributes);
+    pathToCheck = newPathToCheck;
+    condition = newCondition;
 
     // When we already know the value of the target, we replace it with an
     // in-line value.
