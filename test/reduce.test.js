@@ -1,6 +1,6 @@
 'use strict';
 
-import { reduce, COMPARISON_REVERSION_MAP } from '../dist';
+import { reduce, COMPARISON_REVERSION_MAP, enforce } from '../dist';
 import test from 'ava';
 
 test('RFC example should reduce properly', (t) => {
@@ -447,14 +447,32 @@ test('reverses conditions when necessary and reduces final policy correctly', (t
       ],
     },
   };
+  const reducedPolicy = reduce(initialPolicy, {
+    user,
+    matchingResource,
+    privateResource,
+  });
+  const attributes = {
+    user,
+    matchingResource,
+    privateResource,
+  };
 
+  t.deepEqual(reducedPolicy, expectedPolicy);
+  t.deepEqual(reduce(initialPolicy, attributes), expectedPolicy);
+  // Enforce that the original policy is enforced in the same way as the
+  // reduced policy with reversions.
   t.deepEqual(
-    reduce(initialPolicy, {
-      user,
-      matchingResource,
-      privateResource,
-    }),
-    expectedPolicy
+    enforce('writeData', initialPolicy, attributes),
+    enforce('writeData', reducedPolicy, attributes)
+  );
+  t.deepEqual(
+    enforce('readData', initialPolicy, attributes),
+    enforce('readData', reducedPolicy, attributes)
+  );
+  t.deepEqual(
+    enforce('deleteData', initialPolicy, attributes),
+    enforce('deleteData', reducedPolicy, attributes)
   );
 });
 
