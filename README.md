@@ -15,15 +15,18 @@ yarn install @lifeomic/abac
 
 - Rules
   - Comparison
-    - equals: Value being checked is exactly equal to the value defined in the ABAC policy
-    - notEquals: Value being checked does not equal the value defined in the ABAC policy
-    - in: value being checked is contained within the array in ABAC policy
-    - notIn: value not in ABAC array
-    - includes: array of values includes the value in the ABAC policy
-    - superset: array of values is a superset of the array in the ABAC policy
-    - subset: array of values is a subset of the array in the ABAC policy
-    - startsWith: Value being checked that starts with an exact string value
-    - endsWith: Value being checked that ends with an exact string value
+    - `endsWith`: value being checked that ends with an exact string value
+    - `equals`: value being checked is exactly equal to the value defined in the ABAC policy
+    - `in`: value being checked is contained within the array in ABAC policy
+    - `includes`: array of values includes the value in the ABAC policy
+    - `notEquals`: value being checked does not equal the value defined in the ABAC policy
+    - `notIn`: value not in ABAC array
+    - `notIncludes`: array of values does not include the value in the ABAC policy
+    - `prefixOf`: value being checked is a prefix of the value defined in the ABAC policy
+    - `startsWith`: value being checked starts with an exact string value
+    - `subset`: array of values is a subset of the array in the ABAC policy
+    - `suffixOf`: value being checked is a suffix of the value defined in the ABAC policy
+    - `superset`: array of values is a superset of the array in the ABAC policy
   - Target
     - Value of another attribute
   - Value
