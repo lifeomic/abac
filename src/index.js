@@ -4,6 +4,7 @@ import schemas from './schemas';
 import Ajv from 'ajv';
 import deprecate from 'util-deprecate';
 import equals from 'fast-deep-equal';
+import cloneDeep from 'lodash.clonedeep';
 
 const ajv = new Ajv();
 
@@ -315,14 +316,16 @@ const reduceRule = (rule, attributes) => {
 };
 
 const reduceRules = (rules, attributes) => {
+  const attributesClone = cloneDeep(attributes);
+
   const result = [];
 
   if (rules === true) {
     return true;
   }
 
-  for (const rule of rules) {
-    const reducedRule = reduceRule(rule, attributes);
+  for (const rule of cloneDeep(rules)) {
+    const reducedRule = reduceRule(rule, attributesClone);
 
     if (reducedRule === true) {
       return true;
