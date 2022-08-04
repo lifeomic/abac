@@ -169,6 +169,15 @@ const getAttribute = (attributes, name) => {
 };
 
 /**
+ * @param condition a condition to evaluate against the given
+ * value.
+ * @param condition.comparison a comparison operation string from the available
+ * list of comparison operations.
+ * @param condition.value the value to be compared against the function's
+ * "value" argument using the condition's operation.
+ * @param value the value to be compared against the condition's value
+ * using the condition's comparison operator.
+ *
  * @returns `true` if the comparision matches, `false` if there is a mismatch.
  */
 const compare = (condition, value) => {
