@@ -155,7 +155,8 @@ test('supports target attributes', (t) => {
 });
 
 const assertComparisonNotReduced = (t, comparison, value = 'test') => {
-  const policy = {
+  const user = { id: value };
+  const originalPolicy = {
     rules: {
       readData: [
         {
@@ -167,14 +168,13 @@ const assertComparisonNotReduced = (t, comparison, value = 'test') => {
       ],
     },
   };
-
-  const user = { id: value };
-  const expected = {
+  const expectedPolicy = {
     rules: {
-      readData: policy.rules.readData,
+      readData: originalPolicy.rules.readData,
     },
   };
-  t.deepEqual(reduce(policy, { user }), expected);
+
+  t.deepEqual(reduce(originalPolicy, { user }), expectedPolicy);
 };
 
 const getUserCustomConditions = (resourceName) => {
@@ -233,7 +233,27 @@ const getUserCustomConditions = (resourceName) => {
   };
 };
 
-test('reverses conditions with custom user attributes as keys', (t) => {
+test('reverses conditions when key value is known and target value is unknown', (t) => {
+  const user = {
+    customAttributes: {
+      secret: 'confidential',
+      id: 'user-id',
+      patient: 'patient-zero',
+      patients: ['patient-one', 'patient-two'],
+      orgName: 'LifeOmic',
+      name: 'John Doe',
+      actions: ['ENFORCE', 'PROMOTE'],
+      rank: '1-2-3',
+      group: 'hikers-pro',
+      permissions: ['ADMIN', 'SUPER_ADMIN'],
+      nameSuffix: 'The Third',
+      positions: ['ADMIRAL', 'CAPTAIN'],
+    },
+  };
+  const resource = {
+    carrierName: 'verizon',
+    lastName: 'Johnson',
+  };
   const initialPolicy = {
     rules: {
       readData: [
@@ -241,6 +261,14 @@ test('reverses conditions with custom user attributes as keys', (t) => {
           'user.customAttributes.favoriteSauce': {
             comparison: 'in',
             value: ['ketchup', 'mayo'],
+          },
+          'user.customAttributes.lastNames': {
+            comparison: 'includes',
+            target: 'resource.lastName',
+          },
+          'user.customAttributes.carrierNames': {
+            comparison: 'notIncludes',
+            target: 'resource.carrierName',
           },
         }),
       ],
@@ -252,70 +280,87 @@ test('reverses conditions with custom user attributes as keys', (t) => {
         {
           'resource.secret': {
             comparison: 'endsWith',
-            target: 'user.customAttributes.secret',
+            value: user.customAttributes.secret,
           },
           'resource.id': {
             comparison: 'equals',
-            target: 'user.customAttributes.id',
-          },
-          // 'exists' can't be used with a target, so assert that nothing
-          // changed.
-          'user.customAttributes.isActive': {
-            comparison: 'exists',
+            value: user.customAttributes.id,
           },
           'resource.patients': {
             comparison: 'includes',
-            target: 'user.customAttributes.patient',
+            value: user.customAttributes.patient,
           },
           'resource.patient': {
             comparison: 'in',
-            target: 'user.customAttributes.patients',
+            value: user.customAttributes.patients,
           },
           'resource.orgName': {
             comparison: 'notEquals',
-            target: 'user.customAttributes.orgName',
+            value: user.customAttributes.orgName,
           },
           'resource.forbiddenNames': {
             comparison: 'notIncludes',
-            target: 'user.customAttributes.name',
+            value: user.customAttributes.name,
           },
           'resource.forbiddenAction': {
             comparison: 'notIn',
-            target: 'user.customAttributes.actions',
+            value: user.customAttributes.actions,
           },
           'resource.rankOrder': {
             comparison: 'startsWith',
-            target: 'user.customAttributes.rank',
+            value: user.customAttributes.rank,
           },
           'resource.parentGroup': {
             comparison: 'prefixOf',
-            target: 'user.customAttributes.group',
+            value: user.customAttributes.group,
           },
           'resource.permissions': {
             comparison: 'superset',
-            target: 'user.customAttributes.permissions',
+            value: user.customAttributes.permissions,
           },
           'resource.allowedSuffix': {
             comparison: 'endsWith',
-            target: 'user.customAttributes.nameSuffix',
+            value: user.customAttributes.nameSuffix,
           },
           'resource.positions': {
             comparison: 'subset',
-            target: 'user.customAttributes.positions',
+            value: user.customAttributes.positions,
           },
+          // Conditions with known target values should not be reversed.
+          'user.customAttributes.lastNames': {
+            comparison: 'includes',
+            value: resource.lastName,
+          },
+          // Conditions with unknown keys should not be reversed.
+          'user.customAttributes.carrierNames': {
+            comparison: 'notIncludes',
+            value: resource.carrierName,
+          },
+          // Conditions with "value" should not be reversed.
           'user.customAttributes.favoriteSauce': {
             comparison: 'in',
             value: ['ketchup', 'mayo'],
+          },
+          // 'exists' can't be used with a target, so assert that its condition
+          // wasn't reversed.
+          'user.customAttributes.isActive': {
+            comparison: 'exists',
           },
         },
       ],
     },
   };
 
-  t.deepEqual(reduce(initialPolicy, {}), expectedPolicy);
+  t.deepEqual(
+    reduce(initialPolicy, {
+      user,
+      resource,
+    }),
+    expectedPolicy
+  );
 });
 
-test('reverses conditions with custom user attributes as keys and evaluates policy correctly', (t) => {
+test('reverses conditions when necessary and reduces final policy correctly', (t) => {
   const user = {
     customAttributes: {
       actions: ['HIKE', 'SNOWBOARD'],

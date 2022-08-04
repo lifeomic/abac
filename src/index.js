@@ -25,16 +25,14 @@ const COMPARISON_REVERSION_MAP = {
   superset: 'subset',
 };
 
-const USER_CUSTOM_ATTRIBUTES_PATH = 'user.customAttributes';
-
 const isString = (value) =>
   typeof value === 'string' || value instanceof String;
 
-const reverseCondition = (conditionName, condition) => {
+const reverseCondition = (pathToCheck, condition) => {
   // no-op when there is no target or when comparison is 'exists'.
   if (!condition.target || condition.comparison === 'exists') {
     return {
-      conditionName,
+      pathToCheck,
       condition,
     };
   }
@@ -42,10 +40,10 @@ const reverseCondition = (conditionName, condition) => {
   const reversedComparison = COMPARISON_REVERSION_MAP[condition.comparison];
 
   return {
-    conditionName: condition.target,
+    pathToCheck: condition.target,
     condition: {
       comparison: reversedComparison,
-      target: conditionName,
+      target: pathToCheck,
     },
   };
 };
@@ -255,44 +253,49 @@ const compare = (condition, value, attributes) => {
 const reduceRule = (rule, attributes) => {
   const result = {};
 
-  for (let [conditionName, condition] of Object.entries(rule)) {
-    // When a custom attribute is referenced in a rule's key position, we need
-    // to revert the condition so we can correctly perform in-line value
-    // replacement (replacement only happens when the key position is known).
-    if (conditionName.startsWith(USER_CUSTOM_ATTRIBUTES_PATH)) {
-      const { conditionName: newConditionName, condition: newCondition } =
-        reverseCondition(conditionName, condition);
-      conditionName = newConditionName;
+  for (let [pathToCheck, condition] of Object.entries(rule)) {
+    const [originalPathToCheckValue] = getAttributeValues(
+      attributes,
+      pathToCheck.split('.')
+    );
+    const originalTarget = condition.target;
+    const [originalTargetValue] = originalTarget
+      ? getAttributeValues(attributes, condition.target.split('.'))
+      : [null];
+
+    // We reverse conditions when we have a known "key" value and an unknown
+    // "target" value.
+    if (originalPathToCheckValue && originalTarget && !originalTargetValue) {
+      const { pathToCheck: newPathToCheck, condition: newCondition } =
+        reverseCondition(pathToCheck, condition);
+      pathToCheck = newPathToCheck;
       condition = newCondition;
     }
 
-    // We support custom user attributes and replace them with in-line values
-    // when they are already present in the policy.
-    if (
-      condition.target &&
-      condition.target.startsWith(USER_CUSTOM_ATTRIBUTES_PATH)
-    ) {
-      const [userTargetCustomAttributeValue] = getAttributeValues(
+    // When we already know the value of the target, we replace it with an
+    // in-line value.
+    if (condition.target) {
+      const [inLineTargetValue] = getAttributeValues(
         attributes,
         condition.target.split('.')
       );
 
-      if (userTargetCustomAttributeValue) {
-        condition.value = userTargetCustomAttributeValue;
+      if (inLineTargetValue) {
+        condition.value = inLineTargetValue;
         delete condition.target;
       }
     }
 
-    const values = getAttributeValues(attributes, conditionName.split('.'));
+    const values = getAttributeValues(attributes, pathToCheck.split('.'));
 
     if (values.length === 0) {
-      result[conditionName] = condition;
+      result[pathToCheck] = condition;
     } else {
       for (const value of values) {
         const compareResult = compare(condition, value, attributes);
 
         if (compareResult === undefined) {
-          result[conditionName] = condition;
+          result[pathToCheck] = condition;
           break;
         } else {
           if (compareResult === false) {
