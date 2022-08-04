@@ -4,13 +4,57 @@ import schemas from './schemas';
 import Ajv from 'ajv';
 import deprecate from 'util-deprecate';
 import equals from 'fast-deep-equal';
+import cloneDeep from 'lodash.clonedeep';
 
 const ajv = new Ajv();
 
 Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
 
+export const COMPARISON_REVERSION_MAP = {
+  endsWith: 'suffixOf',
+  equals: 'equals',
+  in: 'includes',
+  includes: 'in',
+  notEquals: 'notEquals',
+  notIn: 'notIncludes',
+  notIncludes: 'notIn',
+  prefixOf: 'startsWith',
+  startsWith: 'prefixOf',
+  subset: 'superset',
+  suffixOf: 'endsWith',
+  superset: 'subset',
+};
+
 const isString = (value) =>
   typeof value === 'string' || value instanceof String;
+
+// We reverse conditions when we have a known "key" value and an unknown
+// "target" value.
+const maybeReverseCondition = (pathToCheck, condition, attributes) => {
+  const noOp = {
+    pathToCheck,
+    condition,
+  };
+
+  if (!condition.target || condition.comparison === 'exists') {
+    return noOp;
+  }
+
+  const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
+  const originalTargetValue = getAttribute(attributes, condition.target);
+
+  if (originalPathToCheckValue && !originalTargetValue) {
+    return {
+      pathToCheck: condition.target,
+      condition: {
+        comparison: COMPARISON_REVERSION_MAP[condition.comparison],
+        target: pathToCheck,
+      },
+    };
+  }
+
+  return noOp;
+};
 
 /**
  * Validate a policy.
@@ -124,51 +168,44 @@ const getAttribute = (attributes, name) => {
   return getAttributeValues(attributes, path)[0];
 };
 
-const getCompareValue = (condition, attributes) => {
-  if ('target' in condition) {
-    return getAttribute(attributes, condition.target);
-  }
-  return condition.value;
-};
-
 /**
- * @returns `true` if the comparision matches, `false` if there is a mismatch,
- *          and `undefined` if the target value is not known to compute the
- *          result
+ * @param condition a condition to evaluate against the given
+ * value.
+ * @param condition.comparison a comparison operation string from the available
+ * list of comparison operations.
+ * @param condition.value the value to be compared against the function's
+ * "value" argument using the condition's operation.
+ * @param value the value to be compared against the condition's value
+ * using the condition's comparison operator.
+ *
+ * @returns `true` if the comparision matches, `false` if there is a mismatch.
  */
-const compare = (condition, value, attributes) => {
-  const compareValue = getCompareValue(condition, attributes);
+const compare = (condition, value) => {
+  const compareValue = condition.value;
+
   switch (condition.comparison) {
     case 'includes':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(value) && value.includes(compareValue);
 
     case 'in':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(compareValue) && compareValue.includes(value);
 
     case 'equals':
-      if (compareValue === undefined) return undefined;
       return equals(value, compareValue);
 
     case 'exists':
       return value !== undefined;
 
     case 'notEquals':
-      if (compareValue === undefined) return undefined;
       return !equals(value, compareValue);
 
     case 'notIn':
-      if (compareValue === undefined) return undefined;
       return Array.isArray(compareValue) && !compareValue.includes(value);
 
     case 'notIncludes':
-      // No undefined check for compareValue here since AJV catches that
-      // and throws error.
       return Array.isArray(value) && !value.includes(compareValue);
 
     case 'superset':
-      if (compareValue === undefined) return undefined;
       return (
         Array.isArray(value) &&
         Array.isArray(compareValue) &&
@@ -176,7 +213,6 @@ const compare = (condition, value, attributes) => {
       );
 
     case 'subset':
-      if (compareValue === undefined) return undefined;
       return (
         Array.isArray(value) &&
         Array.isArray(compareValue) &&
@@ -184,11 +220,9 @@ const compare = (condition, value, attributes) => {
       );
 
     case 'startsWith':
-      if (compareValue === undefined) return undefined;
       return isString(value) && value.startsWith(compareValue);
 
     case 'prefixOf':
-      if (compareValue === undefined) return undefined;
       return (
         isString(value) &&
         isString(compareValue) &&
@@ -196,11 +230,9 @@ const compare = (condition, value, attributes) => {
       );
 
     case 'endsWith':
-      if (compareValue === undefined) return undefined;
       return isString(value) && value.endsWith(compareValue);
 
     case 'suffixOf':
-      if (compareValue === undefined) return undefined;
       return (
         isString(value) &&
         isString(compareValue) &&
@@ -216,21 +248,36 @@ const compare = (condition, value, attributes) => {
 const reduceRule = (rule, attributes) => {
   const result = {};
 
-  for (const [name, condition] of Object.entries(rule)) {
-    const values = getAttributeValues(attributes, name.split('.'));
+  for (let [pathToCheck, condition] of Object.entries(cloneDeep(rule))) {
+    const { pathToCheck: newPathToCheck, condition: newCondition } =
+      maybeReverseCondition(pathToCheck, condition, attributes);
+    pathToCheck = newPathToCheck;
+    condition = newCondition;
+
+    // When we already know the value of the target, we replace it with an
+    // in-line value.
+    if (condition.target) {
+      const inLineTargetValue = getAttribute(attributes, condition.target);
+
+      if (inLineTargetValue) {
+        condition.value = inLineTargetValue;
+        delete condition.target;
+      }
+    }
+
+    const values = getAttributeValues(attributes, pathToCheck.split('.'));
 
     if (values.length === 0) {
-      result[name] = condition;
+      result[pathToCheck] = condition;
     } else {
       for (const value of values) {
-        const compareResult = compare(condition, value, attributes);
-        if (compareResult === undefined) {
-          result[name] = condition;
-          break;
-        } else {
-          if (compareResult === false) {
-            return false;
-          }
+        // At this point, all target props in the condition should have been
+        // replaced by the actual value. "condition.value" and the resulting
+        // "compareResult" should never be undefined at this point.
+        const compareResult = compare(condition, value);
+
+        if (compareResult === false) {
+          return false;
         }
       }
     }
@@ -239,18 +286,22 @@ const reduceRule = (rule, attributes) => {
   if (Object.keys(result).length === 0) {
     return true;
   }
+
   return result;
 };
 
 const reduceRules = (rules, attributes) => {
+  const attributesClone = cloneDeep(attributes);
+
   const result = [];
 
   if (rules === true) {
     return true;
   }
 
-  for (const rule of rules) {
-    const reducedRule = reduceRule(rule, attributes);
+  for (const rule of cloneDeep(rules)) {
+    const reducedRule = reduceRule(rule, attributesClone);
+
     if (reducedRule === true) {
       return true;
     } else if (reducedRule) {
@@ -263,21 +314,23 @@ const reduceRules = (rules, attributes) => {
 
 /**
  * Performs a synchronous reduction for whether the given policy might
- * allow the operations.  This function's intended use is for
- * client applications that need a simple check to disable
- * or annotate UI elements.
+ * allow the operations. This function's intended use is for client applications
+ * that need a simple check to disable or annotate UI elements.
  *
  * @param {object} policy the policy to evaluate
  * @param {object} attributes the attributes to use for the evaluation
- * @returns {object} the policy reduced to conditions involving attributes not not given
+ * @returns {object} the policy reduced to conditions involving attributes not
+ * not given
  * @throws {Error} if the policy is invalid
  */
 const reduce = (policy, attributes) => {
   const result = {};
 
   validate(policy);
+
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     rules = reduceRules(rules, attributes);
+
     if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
       result[operation] = rules;
     }
