@@ -317,6 +317,11 @@ const reduceRules = (rules, attributes) => {
  * allow the operations. This function's intended use is for client applications
  * that need a simple check to disable or annotate UI elements.
  *
+ * When a rule where the "key" is known and the "target" is unknown, a
+ * reversion and in-line replacement will occur so the policy can be
+ * evaluated immediately without consumers needing to be aware of the
+ * target attributes.
+ *
  * @param {object} policy the policy to evaluate
  * @param {object} attributes the attributes to use for the evaluation
  * @returns {object} the policy reduced to conditions involving attributes not
