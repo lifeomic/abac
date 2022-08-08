@@ -171,11 +171,10 @@ const assertComparisonNotReduced = (t, comparison, value = 'test') => {
   const expectedPolicy = {
     rules: {
       readData: [
-        // Inverted but not reduced.
         {
           'circle.owner.id': {
             comparison: COMPARISON_REVERSION_MAP[comparison],
-            value,
+            target: 'user.id',
           },
         },
       ],
@@ -282,75 +281,76 @@ test('reverses conditions when key value is known and target value is unknown', 
       ],
     },
   };
+
   const expectedPolicy = {
     rules: {
       readData: [
         {
           'resource.secret': {
             comparison: 'endsWith',
-            value: user.customAttributes.secret,
+            target: 'user.customAttributes.secret',
           },
           'resource.id': {
             comparison: 'equals',
-            value: user.customAttributes.id,
+            target: 'user.customAttributes.id',
           },
           'resource.patients': {
             comparison: 'includes',
-            value: user.customAttributes.patient,
+            target: 'user.customAttributes.patient',
           },
           'resource.patient': {
             comparison: 'in',
-            value: user.customAttributes.patients,
+            target: 'user.customAttributes.patients',
           },
           'resource.orgName': {
             comparison: 'notEquals',
-            value: user.customAttributes.orgName,
+            target: 'user.customAttributes.orgName',
           },
           'resource.forbiddenNames': {
             comparison: 'notIncludes',
-            value: user.customAttributes.name,
+            target: 'user.customAttributes.name',
           },
           'resource.forbiddenAction': {
             comparison: 'notIn',
-            value: user.customAttributes.actions,
+            target: 'user.customAttributes.actions',
           },
           'resource.rankOrder': {
             comparison: 'startsWith',
-            value: user.customAttributes.rank,
+            target: 'user.customAttributes.rank',
           },
           'resource.parentGroup': {
             comparison: 'prefixOf',
-            value: user.customAttributes.group,
+            target: 'user.customAttributes.group',
           },
           'resource.permissions': {
             comparison: 'superset',
-            value: user.customAttributes.permissions,
+            target: 'user.customAttributes.permissions',
           },
           'resource.allowedSuffix': {
             comparison: 'endsWith',
-            value: user.customAttributes.nameSuffix,
+            target: 'user.customAttributes.nameSuffix',
           },
           'resource.positions': {
             comparison: 'subset',
-            value: user.customAttributes.positions,
+            target: 'user.customAttributes.positions',
           },
           // Conditions with known target values should not be reversed.
           'user.customAttributes.lastNames': {
             comparison: 'includes',
-            value: resource.lastName,
+            target: 'resource.lastName',
           },
           // Conditions with unknown keys should not be reversed.
           'user.customAttributes.carrierNames': {
             comparison: 'notIncludes',
-            value: resource.carrierName,
+            target: 'resource.carrierName',
           },
           // Conditions with "value" should not be reversed.
           'user.customAttributes.favoriteSauce': {
             comparison: 'in',
             value: ['ketchup', 'mayo'],
           },
-          // 'exists' can't be used with a target, so assert that its condition
-          // wasn't reversed.
+          // 'exists' can't be used with a target, so assert that its
+          // condition wasn't reversed.
           'user.customAttributes.isActive': {
             comparison: 'exists',
           },
@@ -368,7 +368,7 @@ test('reverses conditions when key value is known and target value is unknown', 
   );
 });
 
-test('reverses conditions when necessary and reduces final policy correctly', (t) => {
+test('that reversed conditions still correctly reduce final policy', (t) => {
   const user = {
     customAttributes: {
       actions: ['HIKE', 'SNOWBOARD'],
@@ -447,19 +447,14 @@ test('reverses conditions when necessary and reduces final policy correctly', (t
       ],
     },
   };
-  const reducedPolicy = reduce(initialPolicy, {
-    user,
-    matchingResource,
-    privateResource,
-  });
   const attributes = {
     user,
     matchingResource,
     privateResource,
   };
+  const reducedPolicy = reduce(initialPolicy, attributes);
 
   t.deepEqual(reducedPolicy, expectedPolicy);
-  t.deepEqual(reduce(initialPolicy, attributes), expectedPolicy);
   // Enforce that the original policy is enforced in the same way as the
   // reduced policy with reversions.
   t.deepEqual(
@@ -476,7 +471,7 @@ test('reverses conditions when necessary and reduces final policy correctly', (t
   );
 });
 
-test('when custom user "target" attributes are known, they are replaced with in-line values', (t) => {
+test('that known eager target attributes are replaced with in-line values', (t) => {
   const initialPolicy = {
     rules: {
       readData: [
@@ -498,6 +493,10 @@ test('when custom user "target" attributes are known, they are replaced with in-
           'resource.secret': {
             comparison: 'equals',
             target: 'user.customAttributes.myCustomSecret',
+          },
+          'resource.anotherSecret': {
+            comparison: 'equals',
+            target: 'user.invalidCustomAttributes.myCustomSecret',
           },
           'resource.isActive': {
             comparison: 'equals',
@@ -530,6 +529,10 @@ test('when custom user "target" attributes are known, they are replaced with in-
             comparison: 'equals',
             value: 'secret-sauce',
           },
+          'resource.anotherSecret': {
+            comparison: 'equals',
+            target: 'user.invalidCustomAttributes.myCustomSecret',
+          },
           'resource.isActive': {
             comparison: 'equals',
             target: 'user.customAttributes.isActive',
@@ -540,17 +543,23 @@ test('when custom user "target" attributes are known, they are replaced with in-
   };
 
   t.deepEqual(
-    reduce(initialPolicy, {
-      user: {
-        customAttributes: {
-          myCustomPatients: ['patient-one', 'patient-two', 'patient-three'],
-          myCustomSecret: 'secret-sauce',
-          forbiddenOrgId: 'e-corp',
-          isPastDue: true,
+    reduce(
+      initialPolicy,
+      {
+        user: {
+          customAttributes: {
+            myCustomPatients: ['patient-one', 'patient-two', 'patient-three'],
+            myCustomSecret: 'secret-sauce',
+            forbiddenOrgId: 'e-corp',
+            isPastDue: true,
+          },
         },
+        resource: { ownerId: 'testuser' },
       },
-      resource: { ownerId: 'testuser' },
-    }),
+      {
+        eagerTargets: ['user.customAttributes'],
+      }
+    ),
     expectedPolicy
   );
 });
@@ -561,4 +570,46 @@ test('rules with undefined comparison targets should not be reduced', (t) => {
   assertComparisonNotReduced(t, 'includes', ['test']);
   assertComparisonNotReduced(t, 'notEquals');
   assertComparisonNotReduced(t, 'notIn', ['test']);
+});
+
+test('validates reduce options', (t) => {
+  const policy = {
+    rules: {
+      accessAdmin: [
+        {
+          'user.groups': {
+            comparison: 'includes',
+            value: 'some-id',
+          },
+        },
+      ],
+    },
+  };
+
+  t.throws(
+    () => reduce(policy, { user: { groups: [] } }, []),
+    'data should be object'
+  );
+  t.throws(
+    () =>
+      reduce(
+        policy,
+        { user: { groups: [] } },
+        { invalidOption: ['1'], eagerTargets: ['user.customAttributes'] }
+      ),
+    'data should NOT have additional properties'
+  );
+  t.throws(
+    () => reduce(policy, { user: { groups: [] } }, { eagerTargets: [] }),
+    'data.eagerTargets should NOT have fewer than 1 items'
+  );
+  t.throws(
+    () =>
+      reduce(policy, { user: { groups: [] } }, { eagerTargets: [{ id: 1 }] }),
+    'data.eagerTargets[0] should be string'
+  );
+  t.notThrows(
+    () => reduce(policy, { user: { groups: [] } }, { eagerTargets: ['1'] }),
+    Error
+  );
 });

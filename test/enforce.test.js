@@ -1262,7 +1262,7 @@ test('rules can use suffixOf operator with value', (t) => {
     enforce('readData', policy, {
       patient: { favoriteSauce: undefined },
     }),
-    'returns false when the value is undefined'
+    'enforce undefined'
   );
 });
 

@@ -5,6 +5,7 @@ import Ajv from 'ajv';
 import deprecate from 'util-deprecate';
 import equals from 'fast-deep-equal';
 import cloneDeep from 'lodash.clonedeep';
+import curry from 'lodash.curry';
 
 const ajv = new Ajv();
 
@@ -62,21 +63,24 @@ const maybeReverseCondition = (pathToCheck, condition, attributes) => {
 };
 
 /**
- * Validate a policy.
+ * Validate value with AJV.
  *
- * @param {object} policy the policy to validate
- * @returns {boolean} true iff the policy is valid
- * @throws Error if the policy is invalid
+ * @param {string} schemaName the name of the JSON schema to use for validation.
+ * @param {object} value the value to validate.
+ * @returns {boolean} true if the value is valid based on specified schema.
+ * @throws Error if the the value is invalid based on the specified schema.
  */
-const validate = (policy) => {
-  const valid = ajv.validate('Policy', policy);
+const validateJsonSchema = curry((schemaName, value) => {
+  const valid = ajv.validate(schemaName, value);
 
   if (!valid) {
     throw new Error(ajv.errorsText());
   }
 
   return valid;
-};
+});
+
+const validate = validateJsonSchema('Policy');
 
 /**
  * Merge multiple policies into a single policy with the same effect.
@@ -173,20 +177,25 @@ const getAttribute = (attributes, name) => {
   return getAttributeValues(attributes, path)[0];
 };
 
+const getCompareValue = (condition, attributes) => {
+  if ('target' in condition) {
+    return getAttribute(attributes, condition.target);
+  }
+  return condition.value;
+};
+
 /**
- * @param condition a condition to evaluate against the given
- * value.
- * @param condition.comparison a comparison operation string from the available
- * list of comparison operations.
- * @param condition.value the value to be compared against the function's
- * "value" argument using the condition's operation.
- * @param value the value to be compared against the condition's value
- * using the condition's comparison operator.
- *
- * @returns `true` if the comparision matches, `false` if there is a mismatch.
+ * @returns `true` if the comparision matches, `false` if there is a mismatch,
+ *           and `undefined` if the target value is not known to compute the
+ *           result.
  */
-const compare = (condition, value) => {
-  const compareValue = condition.value;
+const compare = (condition, value, attributes) => {
+  const compareValue = getCompareValue(condition, attributes);
+
+  // "exists" can have an undefined value.
+  if (compareValue === undefined && condition.comparison !== 'exists') {
+    return undefined;
+  }
 
   switch (condition.comparison) {
     case 'includes':
@@ -250,7 +259,7 @@ const compare = (condition, value) => {
   }
 };
 
-const reduceRule = (rule, attributes) => {
+const reduceRule = (rule, attributes, eagerTargets) => {
   const result = {};
 
   for (let [pathToCheck, condition] of Object.entries(cloneDeep(rule))) {
@@ -260,8 +269,14 @@ const reduceRule = (rule, attributes) => {
     condition = newCondition;
 
     // When we already know the value of the target, we replace it with an
-    // in-line value.
-    if (condition.target) {
+    // in-line value (if configured in eager targets).
+    if (
+      condition.target &&
+      eagerTargets &&
+      eagerTargets.some((eagerTarget) =>
+        condition.target.startsWith(eagerTarget)
+      )
+    ) {
       const inLineTargetValue = getAttribute(attributes, condition.target);
 
       if (inLineTargetValue) {
@@ -276,12 +291,12 @@ const reduceRule = (rule, attributes) => {
       result[pathToCheck] = condition;
     } else {
       for (const value of values) {
-        // At this point, all target props in the condition should have been
-        // replaced by the actual value. "condition.value" and the resulting
-        // "compareResult" should never be undefined at this point.
-        const compareResult = compare(condition, value);
+        const compareResult = compare(condition, value, attributes);
 
-        if (compareResult === false) {
+        if (compareResult === undefined) {
+          result[pathToCheck] = condition;
+          break;
+        } else if (compareResult === false) {
           return false;
         }
       }
@@ -295,7 +310,7 @@ const reduceRule = (rule, attributes) => {
   return result;
 };
 
-const reduceRules = (rules, attributes) => {
+const reduceRules = (rules, attributes, eagerTargets) => {
   const attributesClone = cloneDeep(attributes);
 
   const result = [];
@@ -305,7 +320,7 @@ const reduceRules = (rules, attributes) => {
   }
 
   for (const rule of cloneDeep(rules)) {
-    const reducedRule = reduceRule(rule, attributesClone);
+    const reducedRule = reduceRule(rule, attributesClone, eagerTargets);
 
     if (reducedRule === true) {
       return true;
@@ -329,17 +344,23 @@ const reduceRules = (rules, attributes) => {
  *
  * @param {object} policy the policy to evaluate
  * @param {object} attributes the attributes to use for the evaluation
+ * @param {object} options optional function config
+ * @param {array} options.eagerTargets optional list of attribute paths that
+ * should be eagerly evaluated when reducing the policy. Eager evaluation makes
+ * sure that a rule with a known target will be inverted and replaced with the
+ * known value in-line.
  * @returns {object} the policy reduced to conditions involving attributes not
  * not given
  * @throws {Error} if the policy is invalid
  */
-const reduce = (policy, attributes) => {
+const reduce = (policy, attributes, options = {}) => {
+  validate(policy);
+  validateJsonSchema('ReduceOptions', options);
+
   const result = {};
 
-  validate(policy);
-
   Object.entries(policy.rules).forEach(([operation, rules]) => {
-    rules = reduceRules(rules, attributes);
+    rules = reduceRules(rules, attributes, options.eagerTargets);
 
     if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
       result[operation] = rules;
