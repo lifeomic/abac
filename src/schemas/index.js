@@ -6,4 +6,5 @@ module.exports = {
   Rule: require('./Rule.json'),
   Rules: require('./Rules.json'),
   OperationNames: require('./OperationNames.json'),
+  ReduceOptions: require('./ReduceOptions.json'),
 };
