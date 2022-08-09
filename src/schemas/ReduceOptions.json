@@ -4,7 +4,7 @@
   "description": "An options object that can be passed to the reduce function for configuration.",
   "type": "object",
   "properties": {
-    "eagerTargets": {
+    "inlineTargets": {
       "type": "array",
       "items": {
         "type": ["string"]

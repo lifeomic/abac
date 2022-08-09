@@ -471,7 +471,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
   );
 });
 
-test('that known eager target attributes are replaced with in-line values', (t) => {
+test('that known inline target attributes are replaced with in-line values', (t) => {
   const initialPolicy = {
     rules: {
       readData: [
@@ -496,7 +496,10 @@ test('that known eager target attributes are replaced with in-line values', (t) 
           },
           'resource.anotherSecret': {
             comparison: 'equals',
-            target: 'user.invalidCustomAttributes.myCustomSecret',
+            // Validate that keys starting with the same name as the inline
+            // target don't actually get inlined. We want to check for
+            // exact paths.
+            target: 'user.customAttributesEdgeCase',
           },
           'resource.isActive': {
             comparison: 'equals',
@@ -531,7 +534,7 @@ test('that known eager target attributes are replaced with in-line values', (t) 
           },
           'resource.anotherSecret': {
             comparison: 'equals',
-            target: 'user.invalidCustomAttributes.myCustomSecret',
+            target: 'user.customAttributesEdgeCase',
           },
           'resource.isActive': {
             comparison: 'equals',
@@ -553,11 +556,12 @@ test('that known eager target attributes are replaced with in-line values', (t) 
             forbiddenOrgId: 'e-corp',
             isPastDue: true,
           },
+          customAttributesEdgeCase: 'some-value',
         },
         resource: { ownerId: 'testuser' },
       },
       {
-        eagerTargets: ['user.customAttributes'],
+        inlineTargets: ['user.customAttributes'],
       }
     ),
     expectedPolicy
@@ -595,21 +599,21 @@ test('validates reduce options', (t) => {
       reduce(
         policy,
         { user: { groups: [] } },
-        { invalidOption: ['1'], eagerTargets: ['user.customAttributes'] }
+        { invalidOption: ['1'], inlineTargets: ['user.customAttributes'] }
       ),
     'data should NOT have additional properties'
   );
   t.throws(
-    () => reduce(policy, { user: { groups: [] } }, { eagerTargets: [] }),
-    'data.eagerTargets should NOT have fewer than 1 items'
+    () => reduce(policy, { user: { groups: [] } }, { inlineTargets: [] }),
+    'data.inlineTargets should NOT have fewer than 1 items'
   );
   t.throws(
     () =>
-      reduce(policy, { user: { groups: [] } }, { eagerTargets: [{ id: 1 }] }),
-    'data.eagerTargets[0] should be string'
+      reduce(policy, { user: { groups: [] } }, { inlineTargets: [{ id: 1 }] }),
+    'data.inlineTargets[0] should be string'
   );
   t.notThrows(
-    () => reduce(policy, { user: { groups: [] } }, { eagerTargets: ['1'] }),
+    () => reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] }),
     Error
   );
 });

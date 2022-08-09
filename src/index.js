@@ -259,7 +259,14 @@ const compare = (condition, value, attributes) => {
   }
 };
 
-const reduceRule = (rule, attributes, eagerTargets) => {
+const isSubpath = (compare, subject) => {
+  const subpaths = subject.split('.');
+  const superpathPortion = compare.split('.').slice(0, subpaths.length);
+
+  return subject === superpathPortion.join('.');
+};
+
+const reduceRule = (rule, attributes, inlineTargets) => {
   const result = {};
 
   for (let [pathToCheck, condition] of Object.entries(cloneDeep(rule))) {
@@ -269,12 +276,12 @@ const reduceRule = (rule, attributes, eagerTargets) => {
     condition = newCondition;
 
     // When we already know the value of the target, we replace it with an
-    // in-line value (if configured in eager targets).
+    // in-line value (if configured in inline targets).
     if (
       condition.target &&
-      eagerTargets &&
-      eagerTargets.some((eagerTarget) =>
-        condition.target.startsWith(eagerTarget)
+      inlineTargets &&
+      inlineTargets.some((inlineTarget) =>
+        isSubpath(condition.target, inlineTarget)
       )
     ) {
       const inLineTargetValue = getAttribute(attributes, condition.target);
@@ -310,7 +317,7 @@ const reduceRule = (rule, attributes, eagerTargets) => {
   return result;
 };
 
-const reduceRules = (rules, attributes, eagerTargets) => {
+const reduceRules = (rules, attributes, inlineTargets) => {
   const attributesClone = cloneDeep(attributes);
 
   const result = [];
@@ -320,7 +327,7 @@ const reduceRules = (rules, attributes, eagerTargets) => {
   }
 
   for (const rule of cloneDeep(rules)) {
-    const reducedRule = reduceRule(rule, attributesClone, eagerTargets);
+    const reducedRule = reduceRule(rule, attributesClone, inlineTargets);
 
     if (reducedRule === true) {
       return true;
@@ -345,7 +352,7 @@ const reduceRules = (rules, attributes, eagerTargets) => {
  * @param {object} policy the policy to evaluate
  * @param {object} attributes the attributes to use for the evaluation
  * @param {object} options optional function config
- * @param {array} options.eagerTargets optional list of attribute paths that
+ * @param {array} options.inlineTargets optional list of attribute paths that
  * should be eagerly evaluated when reducing the policy. Eager evaluation makes
  * sure that a rule with a known target will be inverted and replaced with the
  * known value in-line.
@@ -360,7 +367,7 @@ const reduce = (policy, attributes, options = {}) => {
   const result = {};
 
   Object.entries(policy.rules).forEach(([operation, rules]) => {
-    rules = reduceRules(rules, attributes, options.eagerTargets);
+    rules = reduceRules(rules, attributes, options.inlineTargets);
 
     if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
       result[operation] = rules;
