@@ -64,7 +64,8 @@ export function merge(policies: AbacPolicy[]): AbacPolicy;
  */
 export function reduce(
   policy: AbacReducedPolicy,
-  attributes: object
+  attributes: object,
+  options?: { inlineTargets?: string[] }
 ): AbacReducedPolicy;
 
 /**
