@@ -5,13 +5,19 @@ on: pull_request
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: AJV ${{ matrix.ajv-version }}
+    strategy:
+      matrix:
+        ajv-version: [6, 7, 8]
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
+          cache: 'yarn'
       - name: Build and Test
         run: |
           yarn
+          yarn add ajv@${{ matrix.ajv-version }}
           yarn test
           yarn build
