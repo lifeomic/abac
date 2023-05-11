@@ -1,5 +1,6 @@
 export default {
   $schema: 'http://json-schema.org/draft-07/schema#',
+  $id: 'ReduceOptions',
   title: 'ReduceOptions',
   description:
     'An options object that can be passed to the reduce function for configuration.',

@@ -7,6 +7,7 @@ export default {
         '^(([$%a-zA-Z_][$%0-9a-zA-Z_]*)|\\*)(\\.([$%0-9a-zA-Z_]*)|\\*)*$',
     },
   },
+  $id: 'Comparison',
   title: 'Comparison',
   description: 'An individual ABAC attribute comparison',
   type: 'object',

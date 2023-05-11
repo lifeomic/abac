@@ -1,5 +1,6 @@
 export default {
   $schema: 'http://json-schema.org/draft-07/schema#',
+  $id: 'Rule',
   title: 'Rule',
   description: 'An individual ABAC policy rule',
   type: 'object',

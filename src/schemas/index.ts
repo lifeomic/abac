@@ -1,6 +1,6 @@
-export * as Comparison from './Comparison';
-export * as Policy from './Policy';
-export * as Rule from './Rule';
-export * as Rules from './Rules';
-export * as OperationNames from './OperationNames';
-export * as ReduceOptions from './ReduceOptions';
+export { default as Comparison } from './Comparison';
+export { default as Policy } from './Policy';
+export { default as Rule } from './Rule';
+export { default as Rules } from './Rules';
+export { default as OperationNames } from './OperationNames';
+export { default as ReduceOptions } from './ReduceOptions';

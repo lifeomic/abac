@@ -3,29 +3,72 @@ import Ajv from 'ajv';
 import equals from 'fast-deep-equal';
 import cloneDeep from 'lodash.clonedeep';
 
-const ajv = new Ajv();
-
-Object.entries(schemas).forEach(([key, schema]) => ajv.addSchema(schema, key));
+const ajv = new Ajv({
+  schemas: Object.values(schemas),
+});
 
 export type AbacRuleComparison =
   | {
-      comparison: string;
-      value: string[];
+      comparison:
+        | 'superset'
+        | 'subset'
+        | 'in'
+        | 'notIn'
+        | 'equals'
+        | 'notEquals';
+      value: (string | number)[];
       target?: undefined;
     }
   | {
-      comparison: 'equals' | 'includes';
-      value: string;
+      comparison: 'includes' | 'notIncludes' | 'equals' | 'notEquals';
+      value: number | string;
       target?: undefined;
     }
   | {
-      comparison: 'equals' | 'includes' | 'superset';
+      comparison: 'startsWith' | 'prefixOf' | 'suffixOf' | 'endsWith';
+      value?: string;
+      target?: string;
+    }
+  | {
+      comparison: 'equals' | 'notEquals';
+      value: boolean;
+      target?: undefined;
+    }
+  | {
+      comparison:
+        | 'superset'
+        | 'subset'
+        | 'in'
+        | 'equals'
+        | 'includes'
+        | 'notIncludes'
+        | 'notEquals'
+        | 'notIn';
       value?: undefined;
       target: string;
     }
   | {
-      comparison: string;
+      comparison: Omit<
+        | 'superset'
+        | 'subset'
+        | 'in'
+        | 'equals'
+        | 'includes'
+        | 'notIncludes'
+        | 'notEquals'
+        | 'notIn'
+        | 'startsWith'
+        | 'prefixOf'
+        | 'endsWith'
+        | 'suffixOf',
+        string
+      >;
       value?: undefined;
+      target?: undefined;
+    }
+  | {
+      comparison: 'exists';
+      value?: string;
       target?: undefined;
     };
 
@@ -52,7 +95,7 @@ export const COMPARISON_REVERSION_MAP = {
   subset: 'superset',
   suffixOf: 'endsWith',
   superset: 'subset',
-};
+} as const;
 
 const TARGETLESS_COMPARISON_OPERATORS = ['exists'];
 
@@ -81,7 +124,7 @@ const maybeReverseCondition = (
   const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
   const originalTargetValue = getAttribute(attributes, condition.target);
 
-  if (originalPathToCheckValue && !originalTargetValue) {
+  if (originalPathToCheckValue && originalTargetValue === undefined) {
     return {
       pathToCheck: condition.target,
       condition: {
@@ -396,7 +439,7 @@ const reduceRules = (
 ) => {
   const attributesClone = cloneDeep(attributes);
 
-  const result = [];
+  const result: AbacRule[] = [];
 
   if (rules === true || rules === false) {
     return rules;
@@ -440,7 +483,7 @@ const reduceRules = (
  */
 export const reduce = (
   policy: AbacReducedPolicy,
-  attributes: object,
+  attributes?: Record<string, any>,
   options: { inlineTargets?: string[] } = {}
 ): AbacReducedPolicy => {
   validate(policy);
@@ -449,10 +492,10 @@ export const reduce = (
   const result: AbacReducedPolicy['rules'] = {};
 
   Object.entries(policy.rules).forEach(([operation, rules]) => {
-    rules = reduceRules(rules, attributes, options.inlineTargets);
+    const newRules = reduceRules(rules, attributes, options.inlineTargets);
 
-    if (rules === true || (Array.isArray(rules) && rules.length > 0)) {
-      result[operation] = rules;
+    if (newRules === true || (Array.isArray(newRules) && newRules.length > 0)) {
+      result[operation] = newRules;
     }
   });
 
@@ -557,7 +600,7 @@ export const enforceAny = (
  */
 export const privileges = (
   policy: AbacReducedPolicy,
-  attributes: Record<string, any>
+  attributes?: Record<string, any>
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules)
@@ -578,7 +621,7 @@ export const privileges = (
  */
 export const privilegesLenient = (
   policy: AbacReducedPolicy,
-  attributes: Record<string, any>
+  attributes?: Record<string, any>
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules).map(([privilege]) => privilege);

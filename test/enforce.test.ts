@@ -1,10 +1,8 @@
-'use strict';
-
-import { enforce, enforceAny } from '../dist';
 import test from 'ava';
+import { enforce, enforceAny, AbacReducedPolicy } from '../src';
 
 test('RFC example should enforce properly', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       accessAdmin: [
         {
@@ -134,7 +132,7 @@ test('A policy with all access, gives everyone access to everything', (t) => {
 });
 
 test('can enforce positive exists conditionals', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readLifeData: [
         {
@@ -158,7 +156,7 @@ test('can enforce positive exists conditionals', (t) => {
 });
 
 test('supports target attributes', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -183,7 +181,7 @@ test('supports target attributes', (t) => {
 });
 
 test('returns false when target attributes are missing', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -210,12 +208,14 @@ test('returns false for invalid operation names', (t) => {
 });
 
 test('returns false for permissions containing unknown comparisons and target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
           'resource.type': {
+            // @ts-expect-error
             comparison: 'not-entirely-unlike',
+            // @ts-expect-error
             target: 'user.favoriteDrink',
           },
         },
@@ -239,11 +239,12 @@ test('returns false for permissions containing unknown comparisons and target', 
 });
 
 test('returns false for permissions containing unknown comparisons and value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
           'resource.type': {
+            // @ts-expect-error
             comparison: 'not-entirely-unlike',
             value: 'tea',
           },
@@ -258,7 +259,7 @@ test('returns false for permissions containing unknown comparisons and value', (
 });
 
 test('supports the in comparison with target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -277,27 +278,12 @@ test('supports the in comparison with target', (t) => {
       resource: { type: 'tea' },
     })
   );
-});
-
-test('supports the in comparison with target', (t) => {
-  const policy = {
-    rules: {
-      readData: [
-        {
-          'resource.type': {
-            comparison: 'in',
-            target: 'user.favoriteDrinks',
-          },
-        },
-      ],
-    },
-  };
 
   t.false(enforce('readData', policy, { resource: { type: 'tea' } }));
 });
 
 test('supports the in comparison with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -311,22 +297,6 @@ test('supports the in comparison with value', (t) => {
   };
 
   t.true(enforce('readData', policy, { resource: { type: 'tea' } }));
-});
-
-test('supports the in comparison with value', (t) => {
-  const policy = {
-    rules: {
-      readData: [
-        {
-          'resource.type': {
-            comparison: 'in',
-            value: ['tea', 'coffee'],
-          },
-        },
-      ],
-    },
-  };
-
   t.false(enforce('readData', policy, { resource: { type: 'chai' } }));
 });
 
@@ -378,7 +348,7 @@ test('enforceAny returns false when none of the operations are allowed', (t) => 
 });
 
 test('rules can reference values in an array', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -396,7 +366,7 @@ test('rules can reference values in an array', (t) => {
 });
 
 test('rules can target array values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -418,7 +388,7 @@ test('rules can target array values', (t) => {
 });
 
 test('rules can end with a wildcard', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -438,7 +408,7 @@ test('rules can end with a wildcard', (t) => {
 });
 
 test('rules can start with a wildcard', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -462,7 +432,7 @@ test('rules can start with a wildcard', (t) => {
 });
 
 test('rules can contain a wildcard', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -498,7 +468,7 @@ test('rules can contain a wildcard', (t) => {
 });
 
 test('wildcard evaluation fails if attribute resolution fails', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -521,7 +491,7 @@ test('wildcard evaluation fails if attribute resolution fails', (t) => {
 });
 
 test('wildcard evaluation fails if target resolution fails', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -542,7 +512,7 @@ test('wildcard evaluation fails if target resolution fails', (t) => {
 });
 
 test('rules can contain multiple wildcards', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -573,7 +543,7 @@ test('rules can contain multiple wildcards', (t) => {
 });
 
 test('rules can use numeric comparison values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -591,7 +561,7 @@ test('rules can use numeric comparison values', (t) => {
 });
 
 test('rules can match object keys', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -616,7 +586,7 @@ test('rules can match object keys', (t) => {
 });
 
 test('rules can match top-level object keys', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -639,7 +609,7 @@ test('rules can match top-level object keys', (t) => {
 });
 
 test('rules can match literal %keys attribute', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -657,7 +627,7 @@ test('rules can match literal %keys attribute', (t) => {
 });
 
 test('rules can match top-level literal %keys attribute', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -675,9 +645,10 @@ test('rules can match top-level literal %keys attribute', (t) => {
 });
 
 test('returns false for invalid policy', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: {
+        // @ts-expect-error
         '?!*bogus*!?': {
           comparison: 'equals',
           value: 'test',
@@ -690,7 +661,7 @@ test('returns false for invalid policy', (t) => {
 });
 
 test('rules can use equals with complex types', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -714,7 +685,7 @@ test('rules can use equals with complex types', (t) => {
 });
 
 test('rules can use not equals with complex types', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -738,7 +709,7 @@ test('rules can use not equals with complex types', (t) => {
 });
 
 test('rules can use subset with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -757,7 +728,7 @@ test('rules can use subset with value', (t) => {
 });
 
 test('rules can use subset with target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -778,7 +749,7 @@ test('rules can use subset with target', (t) => {
 });
 
 test('rules can use notEquals with explicit values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -796,7 +767,7 @@ test('rules can use notEquals with explicit values', (t) => {
 });
 
 test('rules can use notEquals with referenced values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -815,7 +786,7 @@ test('rules can use notEquals with referenced values', (t) => {
 });
 
 test('rules can use notIn with explicit values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -834,7 +805,7 @@ test('rules can use notIn with explicit values', (t) => {
 });
 
 test('rules can use notIn with referenced values', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -854,7 +825,7 @@ test('rules can use notIn with referenced values', (t) => {
 });
 
 test('rules can use startsWith operator with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -894,7 +865,7 @@ test('rules can use startsWith operator with value', (t) => {
 });
 
 test('rules can use startsWith operator with no value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -913,7 +884,7 @@ test('rules can use startsWith operator with no value', (t) => {
 });
 
 test('rules can use startsWith operator with no target value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -933,7 +904,7 @@ test('rules can use startsWith operator with no target value', (t) => {
 });
 
 test('rules can use startsWith operator with with target value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -952,8 +923,8 @@ test('rules can use startsWith operator with with target value', (t) => {
   );
 });
 
-test('rules can use startsWith operator with value', (t) => {
-  const policy = {
+test('rules can use endsWith operator with value', (t) => {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -995,7 +966,7 @@ test('rules can use startsWith operator with value', (t) => {
 });
 
 test('rules can use endsWith operator with no value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1014,7 +985,7 @@ test('rules can use endsWith operator with no value', (t) => {
 });
 
 test('rules can use endsWith operator with no target value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1034,7 +1005,7 @@ test('rules can use endsWith operator with no target value', (t) => {
 });
 
 test('rules can use endsWith operator with with target value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1054,7 +1025,7 @@ test('rules can use endsWith operator with with target value', (t) => {
 });
 
 test('rules can use notIncludes operator with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1105,7 +1076,7 @@ test('rules can use notIncludes operator with value', (t) => {
 });
 
 test('rules can use notIncludes operator with target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1150,7 +1121,7 @@ test('rules can use notIncludes operator with target', (t) => {
 });
 
 test('rules can use prefixOf operator with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1186,7 +1157,7 @@ test('rules can use prefixOf operator with value', (t) => {
 });
 
 test('rules can use prefixOf operator with target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1231,7 +1202,7 @@ test('rules can use prefixOf operator with target', (t) => {
 });
 
 test('rules can use suffixOf operator with value', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {
@@ -1267,7 +1238,7 @@ test('rules can use suffixOf operator with value', (t) => {
 });
 
 test('rules can use suffixOf operator with target', (t) => {
-  const policy = {
+  const policy: AbacReducedPolicy = {
     rules: {
       readData: [
         {

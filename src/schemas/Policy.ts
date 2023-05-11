@@ -1,5 +1,6 @@
 export default {
   $schema: 'http://json-schema.org/draft-07/schema#',
+  $id: 'Policy',
   title: 'Policy',
   description: 'An ABAC policy document.',
   type: 'object',

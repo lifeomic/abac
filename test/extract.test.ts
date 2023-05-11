@@ -1,14 +1,12 @@
-import { extract } from '../dist';
-import uuid from 'uuid';
 import test from 'ava';
+import { extract, AbacPolicy } from '../src';
+import { randomUUID } from 'crypto';
 
 test('should return rule values', (t) => {
-  const expectedId1 = uuid();
-  const expectedId2 = uuid();
-  const policy = {
+  const expectedId1 = randomUUID();
+  const expectedId2 = randomUUID();
+  const policy: AbacPolicy = {
     rules: {
-      accessAdmin: true,
-      writeData: true,
       readData: [
         {
           'user.patients': {
@@ -38,11 +36,10 @@ test('should return rule values', (t) => {
 });
 
 test('should return attribute values and comparison value only for privilege to be checked', (t) => {
-  const expectedId1 = uuid();
-  const expectedId2 = uuid();
-  const policy = {
+  const expectedId1 = randomUUID();
+  const expectedId2 = randomUUID();
+  const policy: AbacPolicy = {
     rules: {
-      accessAdmin: true,
       writeData: [
         {
           'resource.cohorts': {
@@ -80,11 +77,10 @@ test('should return attribute values and comparison value only for privilege to 
 });
 
 test('should return attribute values and comparison value for mutliple privileges', (t) => {
-  const expectedId1 = uuid();
-  const expectedId2 = uuid();
-  const policy = {
+  const expectedId1 = randomUUID();
+  const expectedId2 = randomUUID();
+  const policy: AbacPolicy = {
     rules: {
-      accessAdmin: true,
       readMaskedData: [
         {
           'resource.cohorts': {
@@ -126,12 +122,10 @@ test('should return attribute values and comparison value for mutliple privilege
 });
 
 test('No rules should be extracted for a boolean operation', (t) => {
-  const expectedId1 = uuid();
-  const expectedId2 = uuid();
-  const policy = {
+  const expectedId1 = randomUUID();
+  const expectedId2 = randomUUID();
+  const policy: AbacPolicy = {
     rules: {
-      accessAdmin: true,
-      writeData: true,
       readData: [
         {
           'user.patients': {
