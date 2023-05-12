@@ -34,15 +34,13 @@
     "src/**/*.js",
     "src/**/*.cjs",
     "src/**/*.mjs",
-    "src/**/*.d.ts",
-    "LICENSE"
+    "src/**/*.d.ts"
   ],
   "author": "LifeOmic <development@lifeomic.com>",
   "license": "MIT",
   "scripts": {
     "clean": "./clean.sh",
     "prepublishOnly": "yarn ts-node esBuild.ts && yarn tsc --project tsconfig.build.json",
-    "postpublish": "pinst --enable",
     "lint": "eslint src test",
     "pretest": "yarn lint",
     "test": "nyc ava --verbose",

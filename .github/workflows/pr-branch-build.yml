@@ -15,9 +15,7 @@ jobs:
         with:
           node-version: 18
           cache: 'yarn'
-      - name: Build and Test
-        run: |
-          yarn
-          yarn add ajv@${{ matrix.ajv-version }}
-          yarn test
-          yarn build
+      - run: yarn
+      - run: yarn add ajv@${{ matrix.ajv-version }}
+      - run: yarn test
+      - run: npm publish --dry-run
