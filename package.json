@@ -47,13 +47,13 @@
     "jenkins-test": "ENV=ava ava --tap | tap-xunit --package unit > test-report.xml"
   },
   "dependencies": {
-    "@types/deep-equal": "^1.0.1",
     "deep-clone": "^4.0.0",
     "deep-equal": "^2.2.1"
   },
   "devDependencies": {
     "@lifeomic/eslint-config-standards": "^3.0.0",
     "@lifeomic/typescript-config": "^2.0.0",
+    "@types/deep-equal": "^1.0.1",
     "@types/lodash": "^4.5.7",
     "@types/node": "^18",
     "@types/semver": "^7.5.0",
