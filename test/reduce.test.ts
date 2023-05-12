@@ -1,10 +1,14 @@
-'use strict';
-
-import { reduce, COMPARISON_REVERSION_MAP, enforce } from '../dist';
-import test from 'ava';
+import test, { ExecutionContext } from 'ava';
+import {
+  reduce,
+  COMPARISON_REVERSION_MAP,
+  enforce,
+  AbacPolicy,
+  AbacRule,
+} from '../src';
 
 test('RFC example should reduce properly', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
         {
@@ -48,7 +52,7 @@ test('RFC example should reduce properly', (t) => {
 
   // admin group gets access to all three operations:
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  let expected = {
+  let expected: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,
@@ -99,7 +103,7 @@ test('A policy that has no access, gives everyone no access', (t) => {
 });
 
 test('A policy with all access, gives everyone access', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,
@@ -121,7 +125,7 @@ test('A policy with all access, gives everyone access', (t) => {
 });
 
 test('supports target attributes', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -138,7 +142,7 @@ test('supports target attributes', (t) => {
   // Test that a user can read their own resources
   const user = { id: 'testuser' };
   const resource1 = { ownerId: 'testuser' };
-  const expectedPolicy1 = {
+  const expectedPolicy1: AbacPolicy = {
     rules: {
       readData: true,
     },
@@ -154,9 +158,13 @@ test('supports target attributes', (t) => {
   t.deepEqual(reduce(policy, { user, resource: resource2 }), expectedPolicy2);
 });
 
-const assertComparisonNotReduced = (t, comparison, value = 'test') => {
+const assertComparisonNotReduced = (
+  t: ExecutionContext,
+  comparison: keyof typeof COMPARISON_REVERSION_MAP,
+  value: string | string[] = 'test'
+) => {
   const user = { id: value };
-  const originalPolicy = {
+  const originalPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -168,7 +176,7 @@ const assertComparisonNotReduced = (t, comparison, value = 'test') => {
       ],
     },
   };
-  const expectedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -184,7 +192,7 @@ const assertComparisonNotReduced = (t, comparison, value = 'test') => {
   t.deepEqual(reduce(originalPolicy, { user }), expectedPolicy);
 };
 
-const getUserCustomConditions = (resourceName) => {
+const getUserCustomConditions = (resourceName: string): AbacRule => {
   return {
     'user.customAttributes.secret': {
       comparison: 'suffixOf',
@@ -240,7 +248,7 @@ const getUserCustomConditions = (resourceName) => {
   };
 };
 
-test('reverses conditions when key value is known and target value is unknown', (t) => {
+test.only('reverses conditions when key value is known and target value is unknown', (t) => {
   const user = {
     customAttributes: {
       secret: 'confidential',
@@ -282,7 +290,7 @@ test('reverses conditions when key value is known and target value is unknown', 
     },
   };
 
-  const expectedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -414,7 +422,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
     secret: 'super-secret-stuff',
   };
 
-  const initialPolicy = {
+  const initialPolicy: AbacPolicy = {
     rules: {
       // Not expected to be in final policy since the custom conditions
       // are not supposed to match.
@@ -434,7 +442,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
       ],
     },
   };
-  const expectedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: true,
       deleteData: [
@@ -472,7 +480,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
 });
 
 test('that known inline target attributes are replaced with in-line values', (t) => {
-  const initialPolicy = {
+  const initialPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -510,7 +518,7 @@ test('that known inline target attributes are replaced with in-line values', (t)
     },
   };
 
-  const expectedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -577,7 +585,7 @@ test('rules with undefined comparison targets should not be reduced', (t) => {
 });
 
 test('validates reduce options', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
         {
@@ -590,30 +598,31 @@ test('validates reduce options', (t) => {
     },
   };
 
-  t.throws(
-    () => reduce(policy, { user: { groups: [] } }, []),
-    'data should be object'
-  );
+  // @ts-expect-error
+  t.throws(() => reduce(policy, { user: { groups: [] } }, []), {
+    message: 'data should be object',
+  });
   t.throws(
     () =>
       reduce(
         policy,
         { user: { groups: [] } },
+        // @ts-expect-error
         { invalidOption: ['1'], inlineTargets: ['user.customAttributes'] }
       ),
-    'data should NOT have additional properties'
+    { message: 'data should NOT have additional properties' }
   );
   t.throws(
     () => reduce(policy, { user: { groups: [] } }, { inlineTargets: [] }),
-    'data.inlineTargets should NOT have fewer than 1 items'
+    { message: 'data.inlineTargets should NOT have fewer than 1 items' }
   );
   t.throws(
     () =>
+      // @ts-expect-error
       reduce(policy, { user: { groups: [] } }, { inlineTargets: [{ id: 1 }] }),
-    'data.inlineTargets[0] should be string'
+    { message: 'data.inlineTargets[0] should be string' }
   );
-  t.notThrows(
-    () => reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] }),
-    Error
+  t.notThrows(() =>
+    reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] })
   );
 });

@@ -1,10 +1,8 @@
-'use strict';
-
-import { enforceLenient } from '../dist';
 import test from 'ava';
+import { enforceLenient, AbacPolicy } from '../src';
 
 test('Partially evaluated policy should enforce properly', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,
@@ -60,9 +58,10 @@ test('returns false for invalid operation names', (t) => {
 });
 
 test('returns false for invalid policy', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: {
+        // @ts-expect-error
         '?!*bogus*!?': {
           comparison: 'equals',
           value: 'test',

@@ -1,74 +1,104 @@
 {
   "name": "@lifeomic/abac",
   "version": "0.0.0",
-  "description": "Lifeomic Attribute Based Access Control Support Module",
-  "main": "./dist/index.js",
-  "browser": "./lib/index.js",
-  "module": "./module/index.js",
-  "types": "./dist/index.d.ts",
+  "description": "LifeOmic Attribute Based Access Control Support Module",
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "browser": "browser/index.js",
+  "module": "src/index.mjs",
+  "engines": {
+    "node": ">=16"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lifeomic/abac.git"
   },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "node": {
+        "import": "./src/index.mjs",
+        "require": "./src/index.cjs"
+      },
+      "browser": "./src/index.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "types": [
+        "./src/types.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "src/**/*.js",
+    "src/**/*.cjs",
+    "src/**/*.mjs",
+    "src/**/*.d.ts"
+  ],
   "author": "LifeOmic <development@lifeomic.com>",
   "license": "MIT",
   "scripts": {
+    "clean": "./clean.sh",
+    "prepublishOnly": "yarn ts-node esBuild.ts && yarn tsc --project tsconfig.build.json",
     "lint": "eslint src test",
-    "pretest": "yarn lint && yarn build-node",
+    "pretest": "yarn lint",
     "test": "nyc ava --verbose",
-    "jenkins-test": "ENV=ava ava --tap | tap-xunit --package unit > test-report.xml",
-    "build-browser": "BABEL_ENV=browser babel ./src --out-dir ./lib --source-maps --copy-files",
-    "build-module": "BABEL_ENV=module babel ./src --out-dir ./module --source-maps --copy-files",
-    "build-node": "babel ./src --out-dir ./dist --source-maps --copy-files",
-    "build": "yarn build-node && yarn build-browser && yarn build-module",
-    "clean": "rm -rf dist lib module"
+    "jenkins-test": "ENV=ava ava --tap | tap-xunit --package unit > test-report.xml"
   },
   "dependencies": {
-    "ajv": "^6.5.0",
-    "babel-runtime": "^6.26.0",
-    "fast-deep-equal": "^3.1.3",
-    "lodash.clonedeep": "^4.5.0",
-    "lodash.curry": "^4.1.1",
-    "util-deprecate": "^1.0.2"
+    "deep-clone": "^4.0.0",
+    "deep-equal": "^2.2.1"
   },
   "devDependencies": {
     "@lifeomic/eslint-config-standards": "^3.0.0",
-    "ava": "0.25.0",
-    "babel-cli": "6.26.0",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.7.0",
+    "@lifeomic/typescript-config": "^2.0.0",
+    "@types/deep-equal": "^1.0.1",
+    "@types/lodash": "^4.5.7",
+    "@types/node": "^18",
+    "@types/semver": "^7.5.0",
+    "ajv": "^6.5.0",
+    "ava": "^3.15.0",
+    "browserslist": "^4.21.5",
     "conventional-changelog-conventionalcommits": "^5.0.0",
+    "esbuild": "^0.17.18",
+    "esbuild-plugin-browserslist": "^0.7.0",
     "eslint": "^8.21.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "glob": "^10.2.3",
     "nyc": "^11.8.0",
     "prettier": "^2.7.1",
     "semantic-release": "^19.0.3",
+    "semver": "^7.5.0",
     "sinon": "^5.0.7",
     "tap-xunit": "^2.3.0",
-    "uuid": "^3.3.2"
+    "ts-node": "^10.9.1",
+    "typescript": "^4.9.5"
+  },
+  "peerDependencies": {
+    "ajv": ">=6.5.0"
   },
   "publishConfig": {
     "access": "public"
   },
-  "eslintConfig": {
-    "extends": [
-      "@lifeomic/standards/javascript",
-      "prettier",
-      "plugin:prettier/recommended"
+  "ava": {
+    "timeout": "30s",
+    "files": [
+      "test/**/*.test.js",
+      "test/**/*.test.ts"
     ],
-    "env": {
-      "commonjs": true
-    },
-    "parserOptions": {
-      "ecmaVersion": 8,
-      "sourceType": "module"
-    },
-    "rules": {
-      "no-case-declarations": "off"
-    }
+    "require": [
+      "ts-node/register/transpile-only"
+    ],
+    "extensions": [
+      "ts",
+      "js"
+    ],
+    "failWithoutAssertions": false,
+    "verbose": true,
+    "concurrency": 1,
+    "failFast": true
   },
   "nyc": {
     "check-coverage": true,
@@ -76,63 +106,5 @@
     "statements": 100,
     "functions": 100,
     "branches": 100
-  },
-  "babel": {
-    "env": {
-      "development": {
-        "presets": [
-          [
-            "babel-preset-env",
-            {
-              "targets": {
-                "node": "8.10"
-              }
-            }
-          ]
-        ],
-        "plugins": [
-          "transform-object-rest-spread",
-          "transform-class-properties",
-          "transform-runtime"
-        ]
-      },
-      "browser": {
-        "presets": [
-          [
-            "babel-preset-env",
-            {
-              "targets": {
-                "browsers": "last 2 versions, ie 10-11"
-              },
-              "modules": false
-            }
-          ]
-        ],
-        "plugins": [
-          "transform-object-rest-spread",
-          "transform-class-properties",
-          "transform-runtime"
-        ]
-      },
-      "module": {
-        "presets": [
-          [
-            "babel-preset-env",
-            {
-              "targets": {
-                "node": "8.10"
-              },
-              "modules": false
-            }
-          ]
-        ],
-        "plugins": [
-          "transform-object-rest-spread",
-          "transform-class-properties",
-          "transform-runtime"
-        ]
-      }
-    },
-    "sourceMaps": true
   }
 }

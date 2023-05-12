@@ -1,10 +1,8 @@
-'use strict';
-
-import { merge } from '../dist';
+import { merge, AbacPolicy } from '../src';
 import test from 'ava';
 
 test('Two halves of the RFC example should merge to produce the full example', (t) => {
-  const policies = [
+  const policies: AbacPolicy[] = [
     {
       rules: {
         accessAdmin: [
@@ -54,7 +52,7 @@ test('Two halves of the RFC example should merge to produce the full example', (
     },
   ];
 
-  const expected = {
+  const expected: AbacPolicy = {
     rules: {
       accessAdmin: [
         {
@@ -105,7 +103,7 @@ test('Two halves of the RFC example should merge to produce the full example', (
 });
 
 test('rules that are true should trump all others', (t) => {
-  const policies = [
+  const policies: AbacPolicy[] = [
     {
       rules: {
         readData: true,
@@ -134,7 +132,7 @@ test('rules that are true should trump all others', (t) => {
     },
   ];
 
-  const expected = {
+  const expected: AbacPolicy = {
     rules: {
       readData: true,
       deleteData: true,
@@ -145,7 +143,7 @@ test('rules that are true should trump all others', (t) => {
 });
 
 test('merging a single policy should produce the single policy', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,

@@ -10,15 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
-          registry-url: 'https://registry.npmjs.org'
+          node-version: 18
+          cache: 'yarn'
       - run: |
           yarn install
           yarn test
-          yarn build
       - env:
           NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -5,13 +5,17 @@ on: pull_request
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: AJV ${{ matrix.ajv-version }}
+    strategy:
+      matrix:
+        ajv-version: [6, 7, 8]
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
-      - name: Build and Test
-        run: |
-          yarn
-          yarn test
-          yarn build
+          node-version: 18
+          cache: 'yarn'
+      - run: yarn
+      - run: yarn add ajv@${{ matrix.ajv-version }}
+      - run: yarn test
+      - run: npm publish --dry-run

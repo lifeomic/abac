@@ -1,10 +1,8 @@
-'use strict';
-
-import { privileges, privilegesLenient } from '../dist';
 import test from 'ava';
+import { privileges, privilegesLenient, AbacPolicy } from '../src';
 
 test('privileges should work', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,
@@ -44,7 +42,7 @@ test('privileges should work', (t) => {
 });
 
 test('privilegesLenient should work', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,
