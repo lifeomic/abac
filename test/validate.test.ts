@@ -1,5 +1,5 @@
-import { AbacPolicy, AbacReducedPolicy, validate } from '../src';
 import test from 'ava';
+import { validate, AbacPolicy } from '../src';
 
 test('RFC example should validate', (t) => {
   const policy: AbacPolicy = {
@@ -88,7 +88,7 @@ test('equals and notEquals should support bools', (t) => {
 });
 
 test('All access should validate', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,
@@ -129,14 +129,14 @@ test('Unknown operation should validate', (t) => {
 });
 
 test('Unknown comparison field should not validate', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
         {
           'user.groups': {
             comparison: 'includes',
-            // @ts-expect-error Invalid rule field
             value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
+            // @ts-expect-error
             type: 'string',
           },
         },
@@ -168,6 +168,7 @@ test('Wrong value type should not validate', (t) => {
     rules: {
       accessAdmin: [
         {
+          // @ts-expect-error
           'user.groups': {
             comparison: 'includes',
             value: ['A', 'B'],
@@ -195,12 +196,10 @@ test('Rejects policies containing both target and value keys', (t) => {
     rules: {
       readData: [
         {
-          // Allow reading if the current user is the owner
+          // @ts-expect-error Allow reading if the current user is the owner
           'resource.ownerId': {
             comparison: 'equals',
-            // @ts-expect-error
             target: 'user.id',
-            // @ts-expect-error
             value: 'value',
           },
         },
@@ -212,7 +211,7 @@ test('Rejects policies containing both target and value keys', (t) => {
 });
 
 test('A policy with LIFE operations is allowed', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       createLifeData: true,
       readLifeData: true,
@@ -225,7 +224,7 @@ test('A policy with LIFE operations is allowed', (t) => {
 });
 
 test('A policy with a new operation is allowed', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       someNewThing: true,
       readData: true,
@@ -236,13 +235,13 @@ test('A policy with a new operation is allowed', (t) => {
 });
 
 test('Allows policies containing unknown comparisons and target', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: [
         {
+          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
-            // @ts-expect-error
             target: 'user.favoriteDrink',
           },
         },
@@ -254,13 +253,13 @@ test('Allows policies containing unknown comparisons and target', (t) => {
 });
 
 test('Allows policies containing unknown comparisons and value', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: [
         {
+          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
-            // @ts-expect-error
             value: 'tea',
           },
         },

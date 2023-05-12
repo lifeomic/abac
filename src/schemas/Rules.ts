@@ -16,4 +16,4 @@ export default {
       const: true,
     },
   ],
-};
+} as const;

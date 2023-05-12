@@ -13,4 +13,4 @@ export default {
   },
   required: ['rules'],
   additionalProperties: false,
-};
+} as const;

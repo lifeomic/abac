@@ -1,11 +1,13 @@
 /node_modules/
 /yarn-error.log
 /.yarnclean
-/work/
-/dist/
-/lib/
-/module/
+/browser/
 .npmrc
 /.vscode/
 /test-report.xml
 /.nyc_output
+
+src/**/*.js
+src/**/*.cjs
+src/**/*.mjs
+src/**/*.d.ts

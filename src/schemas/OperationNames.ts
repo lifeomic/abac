@@ -7,4 +7,4 @@ export default {
   minLength: 2,
   maxLength: 64,
   pattern: '[a-zA-z]+',
-};
+} as const;

@@ -1,8 +1,8 @@
 import test from 'ava';
-import { privileges, privilegesLenient, AbacReducedPolicy } from '../src';
+import { privileges, privilegesLenient, AbacPolicy } from '../src';
 
 test('privileges should work', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,
@@ -42,7 +42,7 @@ test('privileges should work', (t) => {
 });
 
 test('privilegesLenient should work', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,

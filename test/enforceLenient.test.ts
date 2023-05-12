@@ -1,8 +1,8 @@
 import test from 'ava';
-import { enforceLenient, AbacReducedPolicy } from '../src';
+import { enforceLenient, AbacPolicy } from '../src';
 
 test('Partially evaluated policy should enforce properly', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       readData: true,
@@ -58,7 +58,7 @@ test('returns false for invalid operation names', (t) => {
 });
 
 test('returns false for invalid policy', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: {
         // @ts-expect-error

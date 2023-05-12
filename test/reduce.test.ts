@@ -3,12 +3,12 @@ import {
   reduce,
   COMPARISON_REVERSION_MAP,
   enforce,
-  AbacReducedPolicy,
+  AbacPolicy,
   AbacRule,
 } from '../src';
 
 test('RFC example should reduce properly', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
         {
@@ -52,7 +52,7 @@ test('RFC example should reduce properly', (t) => {
 
   // admin group gets access to all three operations:
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  let expected: AbacReducedPolicy = {
+  let expected: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,
@@ -103,7 +103,7 @@ test('A policy that has no access, gives everyone no access', (t) => {
 });
 
 test('A policy with all access, gives everyone access', (t) => {
-  const policy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
       billingAdmin: true,
@@ -125,7 +125,7 @@ test('A policy with all access, gives everyone access', (t) => {
 });
 
 test('supports target attributes', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -142,7 +142,7 @@ test('supports target attributes', (t) => {
   // Test that a user can read their own resources
   const user = { id: 'testuser' };
   const resource1 = { ownerId: 'testuser' };
-  const expectedPolicy1 = {
+  const expectedPolicy1: AbacPolicy = {
     rules: {
       readData: true,
     },
@@ -164,7 +164,7 @@ const assertComparisonNotReduced = (
   value: string | string[] = 'test'
 ) => {
   const user = { id: value };
-  const originalPolicy: AbacReducedPolicy = {
+  const originalPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -176,7 +176,7 @@ const assertComparisonNotReduced = (
       ],
     },
   };
-  const expectedPolicy: AbacReducedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -290,7 +290,7 @@ test.only('reverses conditions when key value is known and target value is unkno
     },
   };
 
-  const expectedPolicy: AbacReducedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -422,7 +422,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
     secret: 'super-secret-stuff',
   };
 
-  const initialPolicy: AbacReducedPolicy = {
+  const initialPolicy: AbacPolicy = {
     rules: {
       // Not expected to be in final policy since the custom conditions
       // are not supposed to match.
@@ -442,7 +442,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
       ],
     },
   };
-  const expectedPolicy: AbacReducedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: true,
       deleteData: [
@@ -480,7 +480,7 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
 });
 
 test('that known inline target attributes are replaced with in-line values', (t) => {
-  const initialPolicy: AbacReducedPolicy = {
+  const initialPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -518,7 +518,7 @@ test('that known inline target attributes are replaced with in-line values', (t)
     },
   };
 
-  const expectedPolicy: AbacReducedPolicy = {
+  const expectedPolicy: AbacPolicy = {
     rules: {
       readData: [
         {
@@ -585,7 +585,7 @@ test('rules with undefined comparison targets should not be reduced', (t) => {
 });
 
 test('validates reduce options', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
         {

@@ -1,86 +1,13 @@
 import * as schemas from './schemas';
 import Ajv from 'ajv';
-import equals from 'fast-deep-equal';
-import cloneDeep from 'lodash.clonedeep';
+import deepEqual from 'deep-equal';
+import deepClone from 'deep-clone';
+import type { AbacComparison, AbacPolicy, AbacRule } from './types';
+export * from './types';
 
 const ajv = new Ajv({
   schemas: Object.values(schemas),
 });
-
-export type AbacRuleComparison =
-  | {
-      comparison:
-        | 'superset'
-        | 'subset'
-        | 'in'
-        | 'notIn'
-        | 'equals'
-        | 'notEquals';
-      value: (string | number)[];
-      target?: undefined;
-    }
-  | {
-      comparison: 'includes' | 'notIncludes' | 'equals' | 'notEquals';
-      value: number | string;
-      target?: undefined;
-    }
-  | {
-      comparison: 'startsWith' | 'prefixOf' | 'suffixOf' | 'endsWith';
-      value?: string;
-      target?: string;
-    }
-  | {
-      comparison: 'equals' | 'notEquals';
-      value: boolean;
-      target?: undefined;
-    }
-  | {
-      comparison:
-        | 'superset'
-        | 'subset'
-        | 'in'
-        | 'equals'
-        | 'includes'
-        | 'notIncludes'
-        | 'notEquals'
-        | 'notIn';
-      value?: undefined;
-      target: string;
-    }
-  | {
-      comparison: Omit<
-        | 'superset'
-        | 'subset'
-        | 'in'
-        | 'equals'
-        | 'includes'
-        | 'notIncludes'
-        | 'notEquals'
-        | 'notIn'
-        | 'startsWith'
-        | 'prefixOf'
-        | 'endsWith'
-        | 'suffixOf',
-        string
-      >;
-      value?: undefined;
-      target?: undefined;
-    }
-  | {
-      comparison: 'exists';
-      value?: string;
-      target?: undefined;
-    };
-
-export type AbacRule = Record<string, AbacRuleComparison | undefined>;
-
-export interface AbacPolicy {
-  rules: Record<string, AbacRule[] | undefined>;
-}
-
-export interface AbacReducedPolicy {
-  rules: Record<string, AbacRule[] | boolean | undefined>;
-}
 
 export const COMPARISON_REVERSION_MAP = {
   endsWith: 'suffixOf',
@@ -106,7 +33,7 @@ const isString = (value: any): value is string =>
 // "target" value.
 const maybeReverseCondition = (
   pathToCheck: string,
-  condition?: AbacRuleComparison,
+  condition: AbacComparison,
   attributes?: Record<string, any>
 ) => {
   const noOp = {
@@ -124,7 +51,10 @@ const maybeReverseCondition = (
   const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
   const originalTargetValue = getAttribute(attributes, condition.target);
 
-  if (originalPathToCheckValue && originalTargetValue === undefined) {
+  if (
+    originalPathToCheckValue !== undefined &&
+    originalTargetValue === undefined
+  ) {
     return {
       pathToCheck: condition.target,
       condition: {
@@ -161,28 +91,28 @@ const validateJsonSchema = (
 /**
  * Validate value with AJV, and the Policy schema.
  *
- * @param {object} policy the value to validate.
+ * @param {AbacPolicy} policy the value to validate.
  * @returns {boolean} true if the value is valid based on specified schema.
  * @throws Error if the value is invalid based on the specified schema.
  */
-export const validate = (policy: AbacPolicy | AbacReducedPolicy): true =>
+export const validate = (policy: AbacPolicy): true =>
   validateJsonSchema('Policy', policy);
 
 /**
  * Merge multiple policies into a single policy with the same effect.
  *
- * @param {Array[AbacReducedPolicy]} policies array of policies to merge
- * @returns {AbacReducedPolicy} the merged policy
+ * @param {Array[AbacPolicy]} policies array of policies to merge
+ * @returns {AbacPolicy} the merged policy
  * @throws {Error} if any of the policies is invalid
  */
-export const merge = (policies: AbacReducedPolicy[]): AbacReducedPolicy => {
-  const result: AbacReducedPolicy['rules'] = {};
+export const merge = (policies: AbacPolicy[]): AbacPolicy => {
+  const result: AbacPolicy['rules'] = {};
 
   for (const policy of policies) {
     validate(policy);
     Object.entries(policy.rules).forEach(([operation, rules]) => {
-      if (rules === true || !rules) {
-        result[operation] = !!rules;
+      if (!Array.isArray(rules)) {
+        result[operation] = rules;
       } else if (result[operation]) {
         if (result[operation] !== true) {
           (result[operation] as AbacRule[]).push(...rules);
@@ -215,11 +145,11 @@ export const extract = (
 
 /**
  * Get a list of all values matching the path (including wildcards).
- *
- * @param attributes attributes as nested objects
- * @param {array[string]} path array of path segments
  */
-const getAttributeValues = (attributes: any, path: string[]): any[] => {
+const getAttributeValues = (
+  attributes: Record<string, any> | null | undefined,
+  path: string[]
+): any[] => {
   if (attributes === undefined || attributes === null) {
     return [];
   }
@@ -236,7 +166,10 @@ const getAttributeValues = (attributes: any, path: string[]): any[] => {
       let values: Record<string, string>[] = [];
 
       for (const key of keys) {
-        const result = getAttributeValues(attributes[key], path.slice(1));
+        const result = getAttributeValues(
+          attributes[key] as Record<string, any>,
+          path.slice(1)
+        );
 
         // If a single sub-path fails to evaluate fail the entire traversal.
         if (result.length === 0) {
@@ -255,7 +188,10 @@ const getAttributeValues = (attributes: any, path: string[]): any[] => {
       );
     default:
       const unescapedName = name.replace(/^%%/, '%');
-      return getAttributeValues(attributes[unescapedName], path.slice(1));
+      return getAttributeValues(
+        attributes[unescapedName] as Record<string, any>,
+        path.slice(1)
+      );
   }
 };
 
@@ -274,7 +210,7 @@ const getAttribute = (
 };
 
 const getCompareValue = (
-  condition: AbacRuleComparison,
+  condition: AbacComparison,
   attributes?: Record<string, any>
 ) => {
   if ('target' in condition) {
@@ -289,7 +225,7 @@ const getCompareValue = (
  *           result.
  */
 const compare = (
-  condition: AbacRuleComparison | undefined,
+  condition: AbacComparison | undefined,
   value?: any,
   attributes?: Record<string, any>
 ): boolean | undefined => {
@@ -313,13 +249,13 @@ const compare = (
       );
 
     case 'equals':
-      return equals(value, compareValue);
+      return deepEqual(value, compareValue);
 
     case 'exists':
       return value !== undefined;
 
     case 'notEquals':
-      return !equals(value, compareValue);
+      return !deepEqual(value, compareValue);
 
     case 'notIn':
       return (
@@ -383,40 +319,42 @@ const reduceRule = (
 ): AbacRule | boolean => {
   const result: AbacRule = {};
 
-  for (const [pathToCheck, condition] of Object.entries(cloneDeep(rule))) {
-    const { pathToCheck: newPathToCheck, condition: newCondition } =
-      maybeReverseCondition(pathToCheck, condition, attributes);
+  for (const [key, value] of Object.entries(deepClone(rule))) {
+    const { pathToCheck, condition } = maybeReverseCondition(
+      key,
+      value,
+      attributes
+    );
 
     // When we already know the value of the target, we replace it with an
     // in-line value (if configured in inline targets).
     if (
-      newCondition?.target &&
+      condition?.target &&
       inlineTargets &&
       inlineTargets.some((inlineTarget) =>
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        isSubpath(newCondition!.target as string, inlineTarget)
+        isSubpath(condition!.target as string, inlineTarget)
       )
     ) {
-      const inLineTargetValue = getAttribute(attributes, newCondition.target);
+      const inLineTargetValue = getAttribute(attributes, condition.target);
 
       if (inLineTargetValue) {
         // @ts-ignore-error
         newCondition.value = inLineTargetValue;
-        // @ts-ignore-error
         delete condition.target;
       }
     }
 
-    const values = getAttributeValues(attributes, newPathToCheck.split('.'));
+    const values = getAttributeValues(attributes, pathToCheck.split('.'));
 
     if (values.length === 0) {
-      result[newPathToCheck] = condition;
+      result[pathToCheck] = condition;
     } else {
       for (const value of values) {
         const compareResult = compare(condition, value, attributes);
 
         if (compareResult === undefined) {
-          result[newPathToCheck] = condition;
+          result[pathToCheck] = condition;
           break;
         } else if (compareResult === false) {
           return false;
@@ -437,7 +375,7 @@ const reduceRules = (
   attributes?: Record<string, any>,
   inlineTargets?: string[]
 ) => {
-  const attributesClone = cloneDeep(attributes);
+  const attributesClone = deepClone(attributes);
 
   const result: AbacRule[] = [];
 
@@ -447,7 +385,7 @@ const reduceRules = (
     return false;
   }
 
-  for (const rule of cloneDeep(rules)) {
+  for (const rule of deepClone(rules)) {
     const reducedRule = reduceRule(rule, attributesClone, inlineTargets);
 
     if (reducedRule === true) {
@@ -482,14 +420,14 @@ const reduceRules = (
  * @throws {Error} if the policy is invalid
  */
 export const reduce = (
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>,
   options: { inlineTargets?: string[] } = {}
-): AbacReducedPolicy => {
+): AbacPolicy => {
   validate(policy);
   validateJsonSchema('ReduceOptions', options);
 
-  const result: AbacReducedPolicy['rules'] = {};
+  const result: AbacPolicy['rules'] = {};
 
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     const newRules = reduceRules(rules, attributes, options.inlineTargets);
@@ -506,14 +444,14 @@ export const reduce = (
  * Check whether the given policy allows the operation with the given attributes.
  *
  * @param {string} operationName the requested operation
- * @param {AbacReducedPolicy} policy the policy to use to check access
+ * @param {AbacPolicy} policy the policy to use to check access
  * @param {object} attributes the attributes to use to check access
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
 export const enforce = (
   operationName: string,
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>
 ): boolean => {
   try {
@@ -540,14 +478,14 @@ export const enforce = (
  * enforcement of ABAC policy!).
  *
  * @param {string} operationName the requested operation
- * @param {AbacReducedPolicy} policy the policy to use to check access
+ * @param {AbacPolicy} policy the policy to use to check access
  * @param {object} attributes the attributes to use to check access
  * @returns {boolean} true iff access is allowed, and false otherwise
  * @throws {Error} Error if the policy is invalid
  */
 export const enforceLenient = (
   operationName: string,
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>
 ): boolean => {
   try {
@@ -577,7 +515,7 @@ export const enforceLenient = (
  */
 export const enforceAny = (
   operationNames: string[],
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>
 ): boolean | string => {
   for (const operation of operationNames) {
@@ -593,13 +531,13 @@ export const enforceAny = (
  * Return the list of privileges that the given policy
  * allows against the given attributes.
  *
- * @param {AbacReducedPolicy} policy the policy to use to check access
+ * @param {AbacPolicy} policy the policy to use to check access
  * @param {object} attributes the attributes to use to check access
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
 export const privileges = (
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
@@ -615,12 +553,12 @@ export const privileges = (
  * or annotate UI elements. Not safe for server-side!
  *
  * @param {object} policy the policy to use to check access
- * @param {AbacReducedPolicy} attributes the attributes to use to check access
+ * @param {AbacPolicy} attributes the attributes to use to check access
  * @returns {string[]} - the list of privileges
  * @throws {Error} Error if the policy is invalid
  */
 export const privilegesLenient = (
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attributes?: Record<string, any>
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
@@ -657,7 +595,7 @@ const isPathPrefix = (left: string, right: string) => {
  * @returns {boolean} True if the attribute is in the rules list
  */
 export const policyRequiresAttribute = (
-  policy: AbacReducedPolicy,
+  policy: AbacPolicy,
   attribute: string
 ): boolean => {
   const rules = Object.values(policy.rules)

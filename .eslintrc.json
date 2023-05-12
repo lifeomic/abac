@@ -1,0 +1,17 @@
+{
+  "extends": [
+    "@lifeomic/standards/typescript",
+    "prettier",
+    "plugin:prettier/recommended"
+  ],
+  "env": {
+    "commonjs": true,
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  },
+  "rules": {
+    "no-case-declarations": "off"
+  }
+}

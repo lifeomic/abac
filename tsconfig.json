@@ -3,21 +3,11 @@
   "compilerOptions": {
     "target": "es2022",
     "module": "commonjs",
-    "lib": ["ES2022", "dom"],
+    "lib": ["ES2022"],
     "types": ["node"],
     "resolveJsonModule": true,
     "declaration": true,
     "emitDeclarationOnly": true,
     "noEmit": true
   },
-  "include": [
-    "./src/**/*.ts",
-    "./test/**/*.ts"
-  ],
-  "exclude": [
-    "./node_modules"
-  ],
-  "ts-node": {
-    "files": true
-  }
 }

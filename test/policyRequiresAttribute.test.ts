@@ -1,10 +1,9 @@
 import test from 'ava';
-import { AbacReducedPolicy, policyRequiresAttribute } from '../src';
+import { AbacPolicy, policyRequiresAttribute } from '../src';
 
 test('should return true when attribute is required', (t) => {
-  const policy: AbacReducedPolicy = {
+  const policy: AbacPolicy = {
     rules: {
-      accessAdmin: false,
       writeData: true,
       readData: [
         {

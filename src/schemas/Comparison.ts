@@ -118,4 +118,4 @@ export default {
       additionalProperties: true,
     },
   ],
-};
+} as const;

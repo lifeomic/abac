@@ -15,4 +15,4 @@ export default {
     },
   },
   additionalProperties: false,
-};
+} as const;
