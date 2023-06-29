@@ -2,7 +2,7 @@
   "name": "@lifeomic/abac",
   "version": "0.0.0",
   "description": "LifeOmic Attribute Based Access Control Support Module",
-  "main": "src/index.js",
+  "main": "src/index.cjs",
   "types": "src/index.d.ts",
   "browser": "browser/index.js",
   "module": "src/index.mjs",
@@ -47,7 +47,7 @@
     "jenkins-test": "ENV=ava ava --tap | tap-xunit --package unit > test-report.xml"
   },
   "dependencies": {
-    "deep-clone": "^4.0.0",
+    "deep-clone": "^3.0.3",
     "deep-equal": "^2.2.1"
   },
   "devDependencies": {
