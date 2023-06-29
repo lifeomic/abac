@@ -2031,10 +2031,10 @@ decompress-response@^3.3.0:
   dependencies:
     mimic-response "^1.0.0"
 
-deep-clone@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/deep-clone/-/deep-clone-4.0.0.tgz#6be9f646cd45b47c46b13cba115953a5df3c24df"
-  integrity sha512-bMvDVR8GiGCGHT4SgqXyXDD9Zmo3kv9YLq8aSO2xslP97A3mFkpNBg+t+fjXERvewzhmtk9efvL+V52iVkD0lg==
+deep-clone@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/deep-clone/-/deep-clone-3.0.3.tgz#c13d7797625b66e955c5f6f52bfad028eb1166bb"
+  integrity sha512-6jtXIlCBAwr3GP/7Il52clbIFIKAxg/pnNkL4/sE6+Oqb10MXMtm9LDZV2IAuwdaKV9VBm8hlxAFk9r6pF8XRw==
 
 deep-equal@^2.2.1:
   version "2.2.1"
