@@ -37,11 +37,13 @@ void build({
 
 void build({
   bundle: true,
+  platform: 'browser',
+  format: 'esm',
   plugins: [
     esbuildPluginBrowserslist(browserslist('defaults'), {
       printUnknownTargets: false,
     }),
   ],
-  outdir: 'browser',
-  entryPoints,
+  outfile: 'src/browser.js',
+  entryPoints: ['src/index.ts'],
 });
