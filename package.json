@@ -84,7 +84,7 @@
   "ava": {
     "timeout": "30s",
     "files": [
-      "test/unit/**/*.test.ts"
+      "test/**/*.test.ts"
     ],
     "require": [
       "ts-node/register/transpile-only"
