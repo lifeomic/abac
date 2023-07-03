@@ -20,7 +20,7 @@
         "import": "./src/index.mjs",
         "require": "./src/index.cjs"
       },
-      "browser": "./src/index.js"
+      "browser": "./browser/index.js"
     }
   },
   "typesVersions": {
@@ -34,7 +34,8 @@
     "src/**/*.js",
     "src/**/*.cjs",
     "src/**/*.mjs",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "browser/**/*"
   ],
   "author": "LifeOmic <development@lifeomic.com>",
   "license": "MIT",
@@ -85,8 +86,7 @@
   "ava": {
     "timeout": "30s",
     "files": [
-      "test/**/*.test.js",
-      "test/**/*.test.ts"
+      "test/unit/**/*.test.ts"
     ],
     "require": [
       "ts-node/register/transpile-only"

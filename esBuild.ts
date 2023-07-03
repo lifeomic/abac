@@ -20,9 +20,6 @@ void build({
   outdir: 'src',
   format: 'cjs',
   entryPoints,
-  outExtension: {
-    '.js': '.cjs',
-  },
 });
 
 void build({
@@ -45,6 +42,6 @@ void build({
       printUnknownTargets: false,
     }),
   ],
-  outdir: 'src',
+  outdir: 'browser',
   entryPoints,
 });
