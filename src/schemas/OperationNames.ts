@@ -1,4 +1,4 @@
-export default {
+export const OperationNames = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   $id: 'OperationNames',
   title: 'OperationNames',

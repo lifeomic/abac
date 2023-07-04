@@ -1,4 +1,4 @@
-export default {
+export const Comparison = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   definitions: {
     ValidTargetString: {

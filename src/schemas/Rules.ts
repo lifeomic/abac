@@ -1,4 +1,4 @@
-export default {
+export const Rules = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   $id: 'Rules',
   title: 'Rules',

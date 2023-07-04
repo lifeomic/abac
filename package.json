@@ -2,9 +2,9 @@
   "name": "@lifeomic/abac",
   "version": "0.0.0",
   "description": "LifeOmic Attribute Based Access Control Support Module",
-  "main": "src/index.cjs",
+  "main": "src/index.js",
   "types": "src/index.d.ts",
-  "browser": "browser/index.js",
+  "browser": "src/browser.js",
   "module": "src/index.mjs",
   "engines": {
     "node": ">=16"
@@ -18,9 +18,9 @@
       "types": "./src/index.d.ts",
       "node": {
         "import": "./src/index.mjs",
-        "require": "./src/index.cjs"
+        "require": "./src/index.js"
       },
-      "browser": "./src/index.js"
+      "browser": "./src/browser.js"
     }
   },
   "typesVersions": {
@@ -32,7 +32,6 @@
   },
   "files": [
     "src/**/*.js",
-    "src/**/*.cjs",
     "src/**/*.mjs",
     "src/**/*.d.ts"
   ],
@@ -85,7 +84,6 @@
   "ava": {
     "timeout": "30s",
     "files": [
-      "test/**/*.test.js",
       "test/**/*.test.ts"
     ],
     "require": [

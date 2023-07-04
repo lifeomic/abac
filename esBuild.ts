@@ -20,9 +20,6 @@ void build({
   outdir: 'src',
   format: 'cjs',
   entryPoints,
-  outExtension: {
-    '.js': '.cjs',
-  },
 });
 
 void build({
@@ -40,11 +37,13 @@ void build({
 
 void build({
   bundle: true,
+  platform: 'browser',
+  format: 'esm',
   plugins: [
     esbuildPluginBrowserslist(browserslist('defaults'), {
       printUnknownTargets: false,
     }),
   ],
-  outdir: 'src',
-  entryPoints,
+  outfile: 'src/browser.js',
+  entryPoints: ['src/index.ts'],
 });
