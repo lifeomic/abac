@@ -7,7 +7,7 @@
   "browser": "src/browser.js",
   "module": "src/index.mjs",
   "engines": {
-    "node": ">=16"
+    "node": ">=14"
   },
   "repository": {
     "type": "git",
