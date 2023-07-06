@@ -1,4 +1,3 @@
-import test, { ExecutionContext } from 'ava';
 import {
   reduce,
   COMPARISON_REVERSION_MAP,
@@ -7,7 +6,7 @@ import {
   AbacRule,
 } from '../src';
 
-test('RFC example should reduce properly', (t) => {
+test('RFC example should reduce properly', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -59,7 +58,7 @@ test('RFC example should reduce properly', (t) => {
       readData: true,
     },
   };
-  t.deepEqual(reduce(policy, { user }), expected);
+  expect(reduce(policy, { user })).toEqual(expected);
 
   // members of both TNBC and Doctors gets readData for the TNBC dataset:
   user = {
@@ -81,28 +80,28 @@ test('RFC example should reduce properly', (t) => {
       ],
     },
   };
-  t.deepEqual(reduce(policy, { user }), expected);
+  expect(reduce(policy, { user })).toEqual(expected);
 
   // user in no groups gets no access:
   user = { groups: [] };
   expected = { rules: {} };
-  t.deepEqual(reduce(policy, { user }), expected);
+  expect(reduce(policy, { user })).toEqual(expected);
 
   // user just in TNBC group, but not doctor gets no access:
   user = { groups: ['8cfdd7b2-236e-4001-8d98-75d931877bbb'] };
   expected = { rules: {} };
-  t.deepEqual(reduce(policy, { user }), expected);
+  expect(reduce(policy, { user })).toEqual(expected);
 });
 
-test('A policy that has no access, gives everyone no access', (t) => {
+test('A policy that has no access, gives everyone no access', () => {
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  t.deepEqual(reduce({ rules: {} }, { user }), { rules: {} });
+  expect(reduce({ rules: {} }, { user })).toEqual({ rules: {} });
 
   user = { groups: [] };
-  t.deepEqual(reduce({ rules: {} }, { user }), { rules: {} });
+  expect(reduce({ rules: {} }, { user })).toEqual({ rules: {} });
 });
 
-test('A policy with all access, gives everyone access', (t) => {
+test('A policy with all access, gives everyone access', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -118,13 +117,13 @@ test('A policy with all access, gives everyone access', (t) => {
   };
 
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  t.deepEqual(reduce(policy, { user }), policy);
+  expect(reduce(policy, { user })).toEqual(policy);
 
   user = { groups: [] };
-  t.deepEqual(reduce(policy, { user }), policy);
+  expect(reduce(policy, { user })).toEqual(policy);
 });
 
-test('supports target attributes', (t) => {
+test('supports target attributes', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -148,20 +147,19 @@ test('supports target attributes', (t) => {
     },
   };
 
-  t.deepEqual(reduce(policy, { user, resource: resource1 }), expectedPolicy1);
+  expect(reduce(policy, { user, resource: resource1 })).toEqual(expectedPolicy1);
 
   // Test that a user cannot read a different user's resource
   const resource2 = { ownerId: 'testuser2' };
   const expectedPolicy2 = {
     rules: {},
   };
-  t.deepEqual(reduce(policy, { user, resource: resource2 }), expectedPolicy2);
+  expect(reduce(policy, { user, resource: resource2 })).toEqual(expectedPolicy2);
 });
 
 const assertComparisonNotReduced = (
-  t: ExecutionContext,
   comparison: keyof typeof COMPARISON_REVERSION_MAP,
-  value: string | string[] = 'test'
+  value: string | string[] = 'test',
 ) => {
   const user = { id: value };
   const originalPolicy: AbacPolicy = {
@@ -189,7 +187,7 @@ const assertComparisonNotReduced = (
     },
   };
 
-  t.deepEqual(reduce(originalPolicy, { user }), expectedPolicy);
+  expect(reduce(originalPolicy, { user })).toEqual(expectedPolicy);
 };
 
 const getUserCustomConditions = (resourceName: string): AbacRule => {
@@ -248,135 +246,135 @@ const getUserCustomConditions = (resourceName: string): AbacRule => {
   };
 };
 
-test.only('reverses conditions when key value is known and target value is unknown', (t) => {
-  const user = {
-    customAttributes: {
-      secret: 'confidential',
-      id: 'user-id',
-      patient: 'patient-zero',
-      patients: ['patient-one', 'patient-two'],
-      orgName: 'LifeOmic',
-      name: 'John Doe',
-      actions: ['ENFORCE', 'PROMOTE'],
-      rank: '1-2-3',
-      group: 'hikers-pro',
-      permissions: ['ADMIN', 'SUPER_ADMIN'],
-      nameSuffix: 'The Third',
-      positions: ['ADMIRAL', 'CAPTAIN'],
-    },
-  };
-  const resource = {
-    carrierName: 'verizon',
-    lastName: 'Johnson',
-  };
-  const initialPolicy = {
-    rules: {
-      readData: [
-        Object.assign(getUserCustomConditions('resource'), {
-          'user.customAttributes.favoriteSauce': {
-            comparison: 'in',
-            value: ['ketchup', 'mayo'],
-          },
-          'user.customAttributes.lastNames': {
-            comparison: 'includes',
-            target: 'resource.lastName',
-          },
-          'user.customAttributes.carrierNames': {
-            comparison: 'notIncludes',
-            target: 'resource.carrierName',
-          },
-        }),
-      ],
-    },
-  };
+test(
+  'reverses conditions when key value is known and target value is unknown',
+  () => {
+    const user = {
+      customAttributes: {
+        secret: 'confidential',
+        id: 'user-id',
+        patient: 'patient-zero',
+        patients: ['patient-one', 'patient-two'],
+        orgName: 'LifeOmic',
+        name: 'John Doe',
+        actions: ['ENFORCE', 'PROMOTE'],
+        rank: '1-2-3',
+        group: 'hikers-pro',
+        permissions: ['ADMIN', 'SUPER_ADMIN'],
+        nameSuffix: 'The Third',
+        positions: ['ADMIRAL', 'CAPTAIN'],
+      },
+    };
+    const resource = {
+      carrierName: 'verizon',
+      lastName: 'Johnson',
+    };
+    const initialPolicy = {
+      rules: {
+        readData: [
+          Object.assign(getUserCustomConditions('resource'), {
+            'user.customAttributes.favoriteSauce': {
+              comparison: 'in',
+              value: ['ketchup', 'mayo'],
+            },
+            'user.customAttributes.lastNames': {
+              comparison: 'includes',
+              target: 'resource.lastName',
+            },
+            'user.customAttributes.carrierNames': {
+              comparison: 'notIncludes',
+              target: 'resource.carrierName',
+            },
+          }),
+        ],
+      },
+    };
 
-  const expectedPolicy: AbacPolicy = {
-    rules: {
-      readData: [
-        {
-          'resource.secret': {
-            comparison: 'endsWith',
-            target: 'user.customAttributes.secret',
+    const expectedPolicy: AbacPolicy = {
+      rules: {
+        readData: [
+          {
+            'resource.secret': {
+              comparison: 'endsWith',
+              target: 'user.customAttributes.secret',
+            },
+            'resource.id': {
+              comparison: 'equals',
+              target: 'user.customAttributes.id',
+            },
+            'resource.patients': {
+              comparison: 'includes',
+              target: 'user.customAttributes.patient',
+            },
+            'resource.patient': {
+              comparison: 'in',
+              target: 'user.customAttributes.patients',
+            },
+            'resource.orgName': {
+              comparison: 'notEquals',
+              target: 'user.customAttributes.orgName',
+            },
+            'resource.forbiddenNames': {
+              comparison: 'notIncludes',
+              target: 'user.customAttributes.name',
+            },
+            'resource.forbiddenAction': {
+              comparison: 'notIn',
+              target: 'user.customAttributes.actions',
+            },
+            'resource.rankOrder': {
+              comparison: 'startsWith',
+              target: 'user.customAttributes.rank',
+            },
+            'resource.parentGroup': {
+              comparison: 'prefixOf',
+              target: 'user.customAttributes.group',
+            },
+            'resource.permissions': {
+              comparison: 'superset',
+              target: 'user.customAttributes.permissions',
+            },
+            'resource.allowedSuffix': {
+              comparison: 'endsWith',
+              target: 'user.customAttributes.nameSuffix',
+            },
+            'resource.positions': {
+              comparison: 'subset',
+              target: 'user.customAttributes.positions',
+            },
+            // Conditions with known target values should not be reversed.
+            'user.customAttributes.lastNames': {
+              comparison: 'includes',
+              target: 'resource.lastName',
+            },
+            // Conditions with unknown keys should not be reversed.
+            'user.customAttributes.carrierNames': {
+              comparison: 'notIncludes',
+              target: 'resource.carrierName',
+            },
+            // Conditions with "value" should not be reversed.
+            'user.customAttributes.favoriteSauce': {
+              comparison: 'in',
+              value: ['ketchup', 'mayo'],
+            },
+            // 'exists' can't be used with a target, so assert that its
+            // condition wasn't reversed.
+            'user.customAttributes.isActive': {
+              comparison: 'exists',
+            },
           },
-          'resource.id': {
-            comparison: 'equals',
-            target: 'user.customAttributes.id',
-          },
-          'resource.patients': {
-            comparison: 'includes',
-            target: 'user.customAttributes.patient',
-          },
-          'resource.patient': {
-            comparison: 'in',
-            target: 'user.customAttributes.patients',
-          },
-          'resource.orgName': {
-            comparison: 'notEquals',
-            target: 'user.customAttributes.orgName',
-          },
-          'resource.forbiddenNames': {
-            comparison: 'notIncludes',
-            target: 'user.customAttributes.name',
-          },
-          'resource.forbiddenAction': {
-            comparison: 'notIn',
-            target: 'user.customAttributes.actions',
-          },
-          'resource.rankOrder': {
-            comparison: 'startsWith',
-            target: 'user.customAttributes.rank',
-          },
-          'resource.parentGroup': {
-            comparison: 'prefixOf',
-            target: 'user.customAttributes.group',
-          },
-          'resource.permissions': {
-            comparison: 'superset',
-            target: 'user.customAttributes.permissions',
-          },
-          'resource.allowedSuffix': {
-            comparison: 'endsWith',
-            target: 'user.customAttributes.nameSuffix',
-          },
-          'resource.positions': {
-            comparison: 'subset',
-            target: 'user.customAttributes.positions',
-          },
-          // Conditions with known target values should not be reversed.
-          'user.customAttributes.lastNames': {
-            comparison: 'includes',
-            target: 'resource.lastName',
-          },
-          // Conditions with unknown keys should not be reversed.
-          'user.customAttributes.carrierNames': {
-            comparison: 'notIncludes',
-            target: 'resource.carrierName',
-          },
-          // Conditions with "value" should not be reversed.
-          'user.customAttributes.favoriteSauce': {
-            comparison: 'in',
-            value: ['ketchup', 'mayo'],
-          },
-          // 'exists' can't be used with a target, so assert that its
-          // condition wasn't reversed.
-          'user.customAttributes.isActive': {
-            comparison: 'exists',
-          },
-        },
-      ],
-    },
-  };
+        ],
+      },
+    };
 
-  t.deepEqual(
-    reduce(initialPolicy, {
+    expect(reduce(initialPolicy, {
       user,
       resource,
-    }),
-    expectedPolicy
-  );
-});
+    })).toEqual(expectedPolicy);
+  },
+);
 
-test('that reversed conditions still correctly reduce final policy', (t) => {
+test('that reversed conditions still correctly reduce final policy', () => {
   const user = {
     customAttributes: {
       actions: ['HIKE', 'SNOWBOARD'],
@@ -462,24 +460,15 @@ test('that reversed conditions still correctly reduce final policy', (t) => {
   };
   const reducedPolicy = reduce(initialPolicy, attributes);
 
-  t.deepEqual(reducedPolicy, expectedPolicy);
+  expect(reducedPolicy).toEqual(expectedPolicy);
   // Enforce that the original policy is enforced in the same way as the
   // reduced policy with reversions.
-  t.deepEqual(
-    enforce('writeData', initialPolicy, attributes),
-    enforce('writeData', reducedPolicy, attributes)
-  );
-  t.deepEqual(
-    enforce('readData', initialPolicy, attributes),
-    enforce('readData', reducedPolicy, attributes)
-  );
-  t.deepEqual(
-    enforce('deleteData', initialPolicy, attributes),
-    enforce('deleteData', reducedPolicy, attributes)
-  );
+  expect(enforce('writeData', initialPolicy, attributes)).toEqual(enforce('writeData', reducedPolicy, attributes));
+  expect(enforce('readData', initialPolicy, attributes)).toEqual(enforce('readData', reducedPolicy, attributes));
+  expect(enforce('deleteData', initialPolicy, attributes)).toEqual(enforce('deleteData', reducedPolicy, attributes));
 });
 
-test('that known inline target attributes are replaced with in-line values', (t) => {
+test('that known inline target attributes are replaced with in-line values', () => {
   const initialPolicy: AbacPolicy = {
     rules: {
       readData: [
@@ -553,38 +542,35 @@ test('that known inline target attributes are replaced with in-line values', (t)
     },
   };
 
-  t.deepEqual(
-    reduce(
-      initialPolicy,
-      {
-        user: {
-          customAttributes: {
-            myCustomPatients: ['patient-one', 'patient-two', 'patient-three'],
-            myCustomSecret: 'secret-sauce',
-            forbiddenOrgId: 'e-corp',
-            isPastDue: true,
-          },
-          customAttributesEdgeCase: 'some-value',
+  expect(reduce(
+    initialPolicy,
+    {
+      user: {
+        customAttributes: {
+          myCustomPatients: ['patient-one', 'patient-two', 'patient-three'],
+          myCustomSecret: 'secret-sauce',
+          forbiddenOrgId: 'e-corp',
+          isPastDue: true,
         },
-        resource: { ownerId: 'testuser' },
+        customAttributesEdgeCase: 'some-value',
       },
-      {
-        inlineTargets: ['user.customAttributes'],
-      }
-    ),
-    expectedPolicy
-  );
+      resource: { ownerId: 'testuser' },
+    },
+    {
+      inlineTargets: ['user.customAttributes'],
+    },
+  )).toEqual(expectedPolicy);
 });
 
-test('rules with undefined comparison targets should not be reduced', (t) => {
-  assertComparisonNotReduced(t, 'equals');
-  assertComparisonNotReduced(t, 'superset', ['test']);
-  assertComparisonNotReduced(t, 'includes', ['test']);
-  assertComparisonNotReduced(t, 'notEquals');
-  assertComparisonNotReduced(t, 'notIn', ['test']);
+test('rules with undefined comparison targets should not be reduced', () => {
+  assertComparisonNotReduced( 'equals');
+  assertComparisonNotReduced( 'superset', ['test']);
+  assertComparisonNotReduced( 'includes', ['test']);
+  assertComparisonNotReduced( 'notEquals');
+  assertComparisonNotReduced( 'notIn', ['test']);
 });
 
-test('validates reduce options', (t) => {
+test('validates reduce options', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -598,31 +584,34 @@ test('validates reduce options', (t) => {
     },
   };
 
-  // @ts-expect-error
-  t.throws(() => reduce(policy, { user: { groups: [] } }, []), {
-    message: 'data should be object',
-  });
-  t.throws(
-    () =>
-      reduce(
-        policy,
-        { user: { groups: [] } },
+  expect(() => reduce(
+    policy,
+    { user: { groups: [] } },
+    // @ts-expect-error
+    [],
+  )).toThrow('data should be object');
+
+  expect(() =>
+    reduce(
+      policy,
+      { user: { groups: [] } },
+      {
         // @ts-expect-error
-        { invalidOption: ['1'], inlineTargets: ['user.customAttributes'] }
-      ),
-    { message: 'data should NOT have additional properties' }
-  );
-  t.throws(
-    () => reduce(policy, { user: { groups: [] } }, { inlineTargets: [] }),
-    { message: 'data.inlineTargets should NOT have fewer than 1 items' }
-  );
-  t.throws(
-    () =>
-      // @ts-expect-error
-      reduce(policy, { user: { groups: [] } }, { inlineTargets: [{ id: 1 }] }),
-    { message: 'data.inlineTargets[0] should be string' }
-  );
-  t.notThrows(() =>
-    reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] })
-  );
+        invalidOption: ['1'],
+        inlineTargets: ['user.customAttributes'],
+      },
+    )).toThrow('data should NOT have additional properties');
+  expect(() => reduce(
+    policy,
+    { user: { groups: [] } },
+    // @ts-expect-error A single entry is required
+    { inlineTargets: [] },
+  ))
+    .toThrow('data.inlineTargets should NOT have fewer than 1 items');
+  expect(() =>
+    // @ts-expect-error
+    reduce(policy, { user: { groups: [] } }, { inlineTargets: [{ id: 1 }] }))
+    .toThrow('data.inlineTargets[0] should be string');
+  expect(() =>
+    reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] })).not.toThrow();
 });

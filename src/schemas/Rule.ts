@@ -1,3 +1,7 @@
+import { AbacComparison } from './Comparison';
+
+export type AbacRule = Record<string, AbacComparison>;
+
 export const Rule = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   $id: 'Rule',

@@ -1,3 +1,7 @@
+export interface AbacReduceOptions {
+  inlineTargets?: [string, ...string[]];
+}
+
 export const ReduceOptions = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   $id: 'ReduceOptions',

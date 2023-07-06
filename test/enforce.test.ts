@@ -1,7 +1,6 @@
-import test from 'ava';
 import { enforce, enforceAny, AbacPolicy } from '../src';
 
-test('RFC example should enforce properly', (t) => {
+test('RFC example should enforce properly', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -47,10 +46,10 @@ test('RFC example should enforce properly', (t) => {
   // admin group gets access to all three operations:
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
   let resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.true(enforce('accessAdmin', policy, { user, resource }));
-  t.true(enforce('billingAdmin', policy, { user, resource }));
-  t.true(enforce('readData', policy, { user, resource }));
-  t.false(enforce('downloadFile', policy, { user, resource }));
+  expect(enforce('accessAdmin', policy, { user, resource })).toBe(true);
+  expect(enforce('billingAdmin', policy, { user, resource })).toBe(true);
+  expect(enforce('readData', policy, { user, resource })).toBe(true);
+  expect(enforce('downloadFile', policy, { user, resource })).toBe(false);
 
   // members of both TNBC and Doctors gets readData for the TNBC dataset:
   user = {
@@ -61,10 +60,10 @@ test('RFC example should enforce properly', (t) => {
     ],
   };
   resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.false(enforce('accessAdmin', policy, { user, resource }));
-  t.false(enforce('billingAdmin', policy, { user, resource }));
-  t.true(enforce('readData', policy, { user, resource }));
-  t.false(enforce('downloadFile', policy, { user, resource }));
+  expect(enforce('accessAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('billingAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('readData', policy, { user, resource })).toBe(true);
+  expect(enforce('downloadFile', policy, { user, resource })).toBe(false);
 
   // members of both TNBC and Doctors gets no access to PED dataset:
   user = {
@@ -75,39 +74,39 @@ test('RFC example should enforce properly', (t) => {
     ],
   };
   resource = { dataset: '62271b6b-35f2-4565-83d8-c1d7a32ec95b' };
-  t.false(enforce('accessAdmin', policy, { user, resource }));
-  t.false(enforce('billingAdmin', policy, { user, resource }));
-  t.false(enforce('readData', policy, { user, resource }));
-  t.false(enforce('downloadFile', policy, { user, resource }));
+  expect(enforce('accessAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('billingAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('readData', policy, { user, resource })).toBe(false);
+  expect(enforce('downloadFile', policy, { user, resource })).toBe(false);
 
   // user in no groups gets no access:
   user = { groups: [] };
   resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.false(enforce('accessAdmin', policy, { user, resource }));
-  t.false(enforce('billingAdmin', policy, { user, resource }));
-  t.false(enforce('readData', policy, { user, resource }));
-  t.false(enforce('downloadFile', policy, { user, resource }));
+  expect(enforce('accessAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('billingAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('readData', policy, { user, resource })).toBe(false);
+  expect(enforce('downloadFile', policy, { user, resource })).toBe(false);
 
   // user just in TNBC group, but not doctor gets no access:
   user = { groups: ['8cfdd7b2-236e-4001-8d98-75d931877bbb'] };
   resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.false(enforce('accessAdmin', policy, { user, resource }));
-  t.false(enforce('billingAdmin', policy, { user, resource }));
-  t.false(enforce('readData', policy, { user, resource }));
-  t.false(enforce('downloadFile', policy, { user, resource }));
+  expect(enforce('accessAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('billingAdmin', policy, { user, resource })).toBe(false);
+  expect(enforce('readData', policy, { user, resource })).toBe(false);
+  expect(enforce('downloadFile', policy, { user, resource })).toBe(false);
 });
 
-test('A policy that has no access, gives everyone no access', (t) => {
+test('A policy that has no access, gives everyone no access', () => {
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
   let resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.false(enforce('readData', { rules: {} }, { user, resource }));
+  expect(enforce('readData', { rules: {} }, { user, resource })).toBe(false);
 
   user = { groups: [] };
   resource = { dataset: '6a2db2e4-f0fc-4db7-9a8f-28ab14667257' };
-  t.false(enforce('readData', { rules: {} }, { user, resource }));
+  expect(enforce('readData', { rules: {} }, { user, resource })).toBe(false);
 });
 
-test('A policy with all access, gives everyone access to everything', (t) => {
+test('A policy with all access, gives everyone access to everything', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -123,15 +122,15 @@ test('A policy with all access, gives everyone access to everything', (t) => {
   };
 
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  t.true(enforce('accessAdmin', policy, { user }));
-  t.true(enforce('readData', policy, { user }));
+  expect(enforce('accessAdmin', policy, { user })).toBe(true);
+  expect(enforce('readData', policy, { user })).toBe(true);
 
   user = { groups: [] };
-  t.true(enforce('accessAdmin', policy, { user }));
-  t.true(enforce('readData', policy, { user }));
+  expect(enforce('accessAdmin', policy, { user })).toBe(true);
+  expect(enforce('readData', policy, { user })).toBe(true);
 });
 
-test('can enforce positive exists conditionals', (t) => {
+test('can enforce positive exists conditionals', () => {
   const policy: AbacPolicy = {
     rules: {
       readLifeData: [
@@ -148,14 +147,16 @@ test('can enforce positive exists conditionals', (t) => {
   // Test that a user can read educational content
   const user = { id: 'testuser' };
   const educationalContent = { id: 'some content' };
-  t.true(enforce('readLifeData', policy, { user, educationalContent }));
+  expect(enforce('readLifeData', policy, { user, educationalContent })).toBe(
+    true,
+  );
 
   // Test that a user cannot read fasting data
   const fastingData = { id: 'some fast' };
-  t.false(enforce('readLifeData', policy, { user, fastingData }));
+  expect(enforce('readLifeData', policy, { user, fastingData })).toBe(false);
 });
 
-test('supports target attributes', (t) => {
+test('supports target attributes', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -173,14 +174,14 @@ test('supports target attributes', (t) => {
   // Test that a user can read their own resources
   const user = { id: 'testuser' };
   const resource1 = { ownerId: 'testuser' };
-  t.true(enforce('readData', policy, { user, resource: resource1 }));
+  expect(enforce('readData', policy, { user, resource: resource1 })).toBe(true);
 
   // Test that a user cannot read a different user's resource
   const resource2 = { ownerId: 'testuser2' };
-  t.false(enforce('readData', policy, { user, resource: resource2 }));
+  expect(enforce('readData', policy, { user, resource: resource2 })).toBe(false);
 });
 
-test('returns false when target attributes are missing', (t) => {
+test('returns false when target attributes are missing', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -196,23 +197,22 @@ test('returns false when target attributes are missing', (t) => {
 
   const user1 = { patients: ['patient1'] };
   const resource1 = {};
-  t.false(enforce('readData', policy, { user: user1, resource: resource1 }));
+  expect(enforce('readData', policy, { user: user1, resource: resource1 })).toBe(false);
 
   const user2 = {};
   const resource2 = { subject: 'patient2' };
-  t.false(enforce('readData', policy, { user: user2, resource: resource2 }));
+  expect(enforce('readData', policy, { user: user2, resource: resource2 })).toBe(false);
 });
 
-test('returns false for invalid operation names', (t) => {
-  t.false(enforce('not-an-operation', { rules: {} }, {}));
+test('returns false for invalid operation names', () => {
+  expect(enforce('not-an-operation', { rules: {} }, {})).toBe(false);
 });
 
-test('returns false for permissions containing unknown comparisons and target', (t) => {
+test('returns false for permissions containing unknown comparisons and target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
-          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
             target: 'user.favoriteDrink',
@@ -223,26 +223,21 @@ test('returns false for permissions containing unknown comparisons and target', 
     },
   };
 
-  t.false(
-    enforce('readData', policy, {
-      user: { favoriteDrink: 'tea' },
-      resource: { type: 'sort of tea' },
-    })
-  );
-  t.true(
-    enforce('createData', policy, {
-      user: { favoriteDrink: 'tea' },
-      resource: { type: 'sort of tea' },
-    })
-  );
+  expect(enforce('readData', policy, {
+    user: { favoriteDrink: 'tea' },
+    resource: { type: 'sort of tea' },
+  })).toBe(false);
+  expect(enforce('createData', policy, {
+    user: { favoriteDrink: 'tea' },
+    resource: { type: 'sort of tea' },
+  })).toBe(true);
 });
 
-test('returns false for permissions containing unknown comparisons and value', (t) => {
+test('returns false for permissions containing unknown comparisons and value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
-          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
             value: 'tea',
@@ -253,11 +248,11 @@ test('returns false for permissions containing unknown comparisons and value', (
     },
   };
 
-  t.false(enforce('readData', policy, { resource: { type: 'sort of tea' } }));
-  t.true(enforce('createData', policy, { resource: { type: 'sort of tea' } }));
+  expect(enforce('readData', policy, { resource: { type: 'sort of tea' } })).toBe(false);
+  expect(enforce('createData', policy, { resource: { type: 'sort of tea' } })).toBe(true);
 });
 
-test('supports the in comparison with target', (t) => {
+test('supports the in comparison with target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -271,17 +266,15 @@ test('supports the in comparison with target', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      user: { favoriteDrinks: ['tea', 'coffee'] },
-      resource: { type: 'tea' },
-    })
-  );
+  expect(enforce('readData', policy, {
+    user: { favoriteDrinks: ['tea', 'coffee'] },
+    resource: { type: 'tea' },
+  })).toBe(true);
 
-  t.false(enforce('readData', policy, { resource: { type: 'tea' } }));
+  expect(enforce('readData', policy, { resource: { type: 'tea' } })).toBe(false);
 });
 
-test('supports the in comparison with value', (t) => {
+test('supports the in comparison with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -295,11 +288,11 @@ test('supports the in comparison with value', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { resource: { type: 'tea' } }));
-  t.false(enforce('readData', policy, { resource: { type: 'chai' } }));
+  expect(enforce('readData', policy, { resource: { type: 'tea' } })).toBe(true);
+  expect(enforce('readData', policy, { resource: { type: 'chai' } })).toBe(false);
 });
 
-test('A policy with a new operation works as expected', (t) => {
+test('A policy with a new operation works as expected', () => {
   const policy: AbacPolicy = {
     rules: {
       someNewThing: true,
@@ -307,15 +300,15 @@ test('A policy with a new operation works as expected', (t) => {
   };
 
   let user = { groups: ['1af3ed70-018b-46cc-ba41-7b731fcb182f'] };
-  t.true(enforce('someNewThing', policy, { user }));
-  t.false(enforce('readData', policy, { user }));
+  expect(enforce('someNewThing', policy, { user })).toBe(true);
+  expect(enforce('readData', policy, { user })).toBe(false);
 
   user = { groups: [] };
-  t.true(enforce('someNewThing', policy, { user }));
-  t.false(enforce('readData', policy, { user }));
+  expect(enforce('someNewThing', policy, { user })).toBe(true);
+  expect(enforce('readData', policy, { user })).toBe(false);
 });
 
-test('enforceAny returns the first allowed operation when multiple are allowed', (t) => {
+test('enforceAny returns the first allowed operation when multiple are allowed', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: true,
@@ -323,30 +316,30 @@ test('enforceAny returns the first allowed operation when multiple are allowed',
     },
   };
 
-  t.is(enforceAny(['readData', 'readAnonData'], policy, {}), 'readData');
+  expect(enforceAny(['readData', 'readAnonData'], policy, {})).toBe('readData');
 });
 
-test('enforceAny returns the first allowed operation when only one is allowed', (t) => {
+test('enforceAny returns the first allowed operation when only one is allowed', () => {
   const policy: AbacPolicy = {
     rules: {
       readAnonData: true,
     },
   };
 
-  t.is(enforceAny(['readData', 'readAnonData'], policy, {}), 'readAnonData');
+  expect(enforceAny(['readData', 'readAnonData'], policy, {})).toBe('readAnonData');
 });
 
-test('enforceAny returns false when none of the operations are allowed', (t) => {
+test('enforceAny returns false when none of the operations are allowed', () => {
   const policy: AbacPolicy = {
     rules: {
       billingAdmin: true,
     },
   };
 
-  t.false(enforceAny(['readData', 'readAnonData'], policy, {}));
+  expect(enforceAny(['readData', 'readAnonData'], policy, {})).toBe(false);
 });
 
-test('rules can reference values in an array', (t) => {
+test('rules can reference values in an array', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -360,11 +353,11 @@ test('rules can reference values in an array', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { array: [{ value: 'test' }] }));
-  t.false(enforce('readData', policy, { array: [{ value: 'bogus' }] }));
+  expect(enforce('readData', policy, { array: [{ value: 'test' }] })).toBe(true);
+  expect(enforce('readData', policy, { array: [{ value: 'bogus' }] })).toBe(false);
 });
 
-test('rules can target array values', (t) => {
+test('rules can target array values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -378,15 +371,13 @@ test('rules can target array values', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, { value: 'test', array: [{ value: 'test' }] })
-  );
-  t.false(
-    enforce('readData', policy, { value: 'test', array: [{ value: 'bogus' }] })
-  );
+  expect(enforce('readData', policy, { value: 'test', array: [{ value: 'test' }] })).toBe(true);
+  expect(
+    enforce('readData', policy, { value: 'test', array: [{ value: 'bogus' }] }),
+  ).toBe(false);
 });
 
-test('rules can end with a wildcard', (t) => {
+test('rules can end with a wildcard', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -400,13 +391,13 @@ test('rules can end with a wildcard', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { some: { a: 'test', b: 'test' } }));
-  t.false(enforce('readData', policy, { some: { a: 'test', b: 'bogus' } }));
-  t.true(enforce('readData', policy, { some: ['test', 'test'] }));
-  t.false(enforce('readData', policy, { some: ['test', 'bogus'] }));
+  expect(enforce('readData', policy, { some: { a: 'test', b: 'test' } })).toBe(true);
+  expect(enforce('readData', policy, { some: { a: 'test', b: 'bogus' } })).toBe(false);
+  expect(enforce('readData', policy, { some: ['test', 'test'] })).toBe(true);
+  expect(enforce('readData', policy, { some: ['test', 'bogus'] })).toBe(false);
 });
 
-test('rules can start with a wildcard', (t) => {
+test('rules can start with a wildcard', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -420,17 +411,13 @@ test('rules can start with a wildcard', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, { a: { some: 'test' }, b: { some: 'test' } })
-  );
-  t.false(
-    enforce('readData', policy, { a: { some: 'bogus' }, b: { some: 'test' } })
-  );
-  t.true(enforce('readData', policy, [{ some: 'test' }, { some: 'test' }]));
-  t.false(enforce('readData', policy, [{ some: 'test' }, { some: 'bogus' }]));
+  expect(enforce('readData', policy, { a: { some: 'test' }, b: { some: 'test' } })).toBe(true);
+  expect(enforce('readData', policy, { a: { some: 'bogus' }, b: { some: 'test' } })).toBe(false);
+  expect(enforce('readData', policy, [{ some: 'test' }, { some: 'test' }])).toBe(true);
+  expect(enforce('readData', policy, [{ some: 'test' }, { some: 'bogus' }])).toBe(false);
 });
 
-test('rules can contain a wildcard', (t) => {
+test('rules can contain a wildcard', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -444,29 +431,21 @@ test('rules can contain a wildcard', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      some: { a: { property: 'test' }, b: { property: 'test' } },
-    })
-  );
-  t.false(
-    enforce('readData', policy, {
-      some: { a: { property: 'test' }, b: { property: 'bogus' } },
-    })
-  );
-  t.true(
-    enforce('readData', policy, {
-      some: [{ property: 'test' }, { property: 'test' }],
-    })
-  );
-  t.false(
-    enforce('readData', policy, {
-      some: [{ property: 'test' }, { property: 'bogus' }],
-    })
-  );
+  expect(enforce('readData', policy, {
+    some: { a: { property: 'test' }, b: { property: 'test' } },
+  })).toBe(true);
+  expect(enforce('readData', policy, {
+    some: { a: { property: 'test' }, b: { property: 'bogus' } },
+  })).toBe(false);
+  expect(enforce('readData', policy, {
+    some: [{ property: 'test' }, { property: 'test' }],
+  })).toBe(true);
+  expect(enforce('readData', policy, {
+    some: [{ property: 'test' }, { property: 'bogus' }],
+  })).toBe(false);
 });
 
-test('wildcard evaluation fails if attribute resolution fails', (t) => {
+test('wildcard evaluation fails if attribute resolution fails', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -480,16 +459,14 @@ test('wildcard evaluation fails if attribute resolution fails', (t) => {
     },
   };
 
-  t.false(enforce('readData', policy, {}));
-  t.false(enforce('readData', policy, { some: { property: 'test' } }));
-  t.false(
-    enforce('readData', policy, {
-      some: [{ property: 'test' }, { bogus: 'test' }],
-    })
-  );
+  expect(enforce('readData', policy, {})).toBe(false);
+  expect(enforce('readData', policy, { some: { property: 'test' } })).toBe(false);
+  expect(enforce('readData', policy, {
+    some: [{ property: 'test' }, { bogus: 'test' }],
+  })).toBe(false);
 });
 
-test('wildcard evaluation fails if target resolution fails', (t) => {
+test('wildcard evaluation fails if target resolution fails', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -503,14 +480,12 @@ test('wildcard evaluation fails if target resolution fails', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, {
-      some: [{ property: 'test' }, { property: 'test' }],
-    })
-  );
+  expect(enforce('readData', policy, {
+    some: [{ property: 'test' }, { property: 'test' }],
+  })).toBe(false);
 });
 
-test('rules can contain multiple wildcards', (t) => {
+test('rules can contain multiple wildcards', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -524,24 +499,18 @@ test('rules can contain multiple wildcards', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      some: [{ property: ['test', 'test'] }, { property: ['test', 'test'] }],
-    })
-  );
-  t.false(
-    enforce('readData', policy, {
-      some: [{ property: ['test', 'bogus'] }, { property: ['test', 'test'] }],
-    })
-  );
-  t.false(
-    enforce('readData', policy, {
-      some: [{ property: ['test', 'test'] }, { bogus: ['test', 'test'] }],
-    })
-  );
+  expect(enforce('readData', policy, {
+    some: [{ property: ['test', 'test'] }, { property: ['test', 'test'] }],
+  })).toBe(true);
+  expect(enforce('readData', policy, {
+    some: [{ property: ['test', 'bogus'] }, { property: ['test', 'test'] }],
+  })).toBe(false);
+  expect(enforce('readData', policy, {
+    some: [{ property: ['test', 'test'] }, { bogus: ['test', 'test'] }],
+  })).toBe(false);
 });
 
-test('rules can use numeric comparison values', (t) => {
+test('rules can use numeric comparison values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -555,11 +524,11 @@ test('rules can use numeric comparison values', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { some: { value: 0 } }));
-  t.false(enforce('readData', policy, { some: { value: 1 } }));
+  expect(enforce('readData', policy, { some: { value: 0 } })).toBe(true);
+  expect(enforce('readData', policy, { some: { value: 1 } })).toBe(false);
 });
 
-test('rules can match object keys', (t) => {
+test('rules can match object keys', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -577,14 +546,12 @@ test('rules can match object keys', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { some: { object: { a: 1, b: 2 } } }));
-  t.false(enforce('readData', policy, { some: { object: { a: 1, d: 2 } } }));
-  t.false(
-    enforce('readData', policy, { some: { object: { a: 1, b: 2, c: 3 } } })
-  );
+  expect(enforce('readData', policy, { some: { object: { a: 1, b: 2 } } })).toBe(true);
+  expect(enforce('readData', policy, { some: { object: { a: 1, d: 2 } } })).toBe(false);
+  expect(enforce('readData', policy, { some: { object: { a: 1, b: 2, c: 3 } } })).toBe(false);
 });
 
-test('rules can match top-level object keys', (t) => {
+test('rules can match top-level object keys', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -602,12 +569,12 @@ test('rules can match top-level object keys', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { a: 1, b: 2 }));
-  t.false(enforce('readData', policy, { a: 1, d: 2 }));
-  t.false(enforce('readData', policy, { a: 1, b: 2, c: 3 }));
+  expect(enforce('readData', policy, { a: 1, b: 2 })).toBe(true);
+  expect(enforce('readData', policy, { a: 1, d: 2 })).toBe(false);
+  expect(enforce('readData', policy, { a: 1, b: 2, c: 3 })).toBe(false);
 });
 
-test('rules can match literal %keys attribute', (t) => {
+test('rules can match literal %keys attribute', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -621,11 +588,11 @@ test('rules can match literal %keys attribute', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { object: { '%keys': 'test' } }));
-  t.false(enforce('readData', policy, { object: { '%keys': 'bogus' } }));
+  expect(enforce('readData', policy, { object: { '%keys': 'test' } })).toBe(true);
+  expect(enforce('readData', policy, { object: { '%keys': 'bogus' } })).toBe(false);
 });
 
-test('rules can match top-level literal %keys attribute', (t) => {
+test('rules can match top-level literal %keys attribute', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -639,11 +606,11 @@ test('rules can match top-level literal %keys attribute', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { '%keys': 'test' }));
-  t.false(enforce('readData', policy, { '%keys': 'bogus' }));
+  expect(enforce('readData', policy, { '%keys': 'test' })).toBe(true);
+  expect(enforce('readData', policy, { '%keys': 'bogus' })).toBe(false);
 });
 
-test('returns false for invalid policy', (t) => {
+test('returns false for invalid policy', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: {
@@ -656,10 +623,10 @@ test('returns false for invalid policy', (t) => {
     },
   };
 
-  t.false(enforce('readData', policy, {}));
+  expect(enforce('readData', policy, {})).toBe(false);
 });
 
-test('rules can use equals with complex types', (t) => {
+test('rules can use equals with complex types', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -673,17 +640,15 @@ test('rules can use equals with complex types', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] }));
-  t.false(
-    enforce('readData', policy, { a: [1, 2, 3], b: ['one', 'two', 'three'] })
-  );
-  t.true(enforce('readData', policy, { a: true, b: true }));
-  t.true(enforce('readData', policy, { a: 'A', b: 'A' }));
-  t.false(enforce('readData', policy, { a: 'A', b: 'B' }));
-  t.false(enforce('readData', policy, { a: true, b: false }));
+  expect(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] })).toBe(true);
+  expect(enforce('readData', policy, { a: [1, 2, 3], b: ['one', 'two', 'three'] })).toBe(false);
+  expect(enforce('readData', policy, { a: true, b: true })).toBe(true);
+  expect(enforce('readData', policy, { a: 'A', b: 'A' })).toBe(true);
+  expect(enforce('readData', policy, { a: 'A', b: 'B' })).toBe(false);
+  expect(enforce('readData', policy, { a: true, b: false })).toBe(false);
 });
 
-test('rules can use not equals with complex types', (t) => {
+test('rules can use not equals with complex types', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -697,17 +662,15 @@ test('rules can use not equals with complex types', (t) => {
     },
   };
 
-  t.false(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] }));
-  t.true(
-    enforce('readData', policy, { a: [1, 2, 3], b: ['one', 'two', 'three'] })
-  );
-  t.false(enforce('readData', policy, { a: true, b: true }));
-  t.false(enforce('readData', policy, { a: 'A', b: 'A' }));
-  t.true(enforce('readData', policy, { a: 'A', b: 'B' }));
-  t.true(enforce('readData', policy, { a: true, b: false }));
+  expect(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] })).toBe(false);
+  expect(enforce('readData', policy, { a: [1, 2, 3], b: ['one', 'two', 'three'] })).toBe(true);
+  expect(enforce('readData', policy, { a: true, b: true })).toBe(false);
+  expect(enforce('readData', policy, { a: 'A', b: 'A' })).toBe(false);
+  expect(enforce('readData', policy, { a: 'A', b: 'B' })).toBe(true);
+  expect(enforce('readData', policy, { a: true, b: false })).toBe(true);
 });
 
-test('rules can use subset with value', (t) => {
+test('rules can use subset with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -721,12 +684,12 @@ test('rules can use subset with value', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { a: [1, 2, 3] }));
-  t.true(enforce('readData', policy, { a: [1] }));
-  t.false(enforce('readData', policy, { a: [4, 5, 6] }));
+  expect(enforce('readData', policy, { a: [1, 2, 3] })).toBe(true);
+  expect(enforce('readData', policy, { a: [1] })).toBe(true);
+  expect(enforce('readData', policy, { a: [4, 5, 6] })).toBe(false);
 });
 
-test('rules can use subset with target', (t) => {
+test('rules can use subset with target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -740,14 +703,14 @@ test('rules can use subset with target', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] }));
-  t.true(enforce('readData', policy, { a: [1], b: [1, 2, 3] }));
-  t.false(enforce('readData', policy, { a: [4, 5, 6], b: [1, 2, 3] }));
-  t.false(enforce('readData', policy, { a: [4, 5, 6] }));
-  t.false(enforce('readData', policy, { a: '12', b: '123' }));
+  expect(enforce('readData', policy, { a: [1, 2, 3], b: [1, 2, 3] })).toBe(true);
+  expect(enforce('readData', policy, { a: [1], b: [1, 2, 3] })).toBe(true);
+  expect(enforce('readData', policy, { a: [4, 5, 6], b: [1, 2, 3] })).toBe(false);
+  expect(enforce('readData', policy, { a: [4, 5, 6] })).toBe(false);
+  expect(enforce('readData', policy, { a: '12', b: '123' })).toBe(false);
 });
 
-test('rules can use notEquals with explicit values', (t) => {
+test('rules can use notEquals with explicit values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -761,11 +724,11 @@ test('rules can use notEquals with explicit values', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { object: { key: 13 } }));
-  t.false(enforce('readData', policy, { object: { key: 42 } }));
+  expect(enforce('readData', policy, { object: { key: 13 } })).toBe(true);
+  expect(enforce('readData', policy, { object: { key: 42 } })).toBe(false);
 });
 
-test('rules can use notEquals with referenced values', (t) => {
+test('rules can use notEquals with referenced values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -779,12 +742,12 @@ test('rules can use notEquals with referenced values', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { object: { key: 13, value: 42 } }));
-  t.false(enforce('readData', policy, { object: { key: 42, value: 42 } }));
-  t.false(enforce('readData', policy, { object: { key: 13 } }));
+  expect(enforce('readData', policy, { object: { key: 13, value: 42 } })).toBe(true);
+  expect(enforce('readData', policy, { object: { key: 42, value: 42 } })).toBe(false);
+  expect(enforce('readData', policy, { object: { key: 13 } })).toBe(false);
 });
 
-test('rules can use notIn with explicit values', (t) => {
+test('rules can use notIn with explicit values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -798,12 +761,12 @@ test('rules can use notIn with explicit values', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { object: { key: 3 } }));
-  t.false(enforce('readData', policy, { object: { key: 1 } }));
-  t.false(enforce('readData', policy, { object: { key: 2 } }));
+  expect(enforce('readData', policy, { object: { key: 3 } })).toBe(true);
+  expect(enforce('readData', policy, { object: { key: 1 } })).toBe(false);
+  expect(enforce('readData', policy, { object: { key: 2 } })).toBe(false);
 });
 
-test('rules can use notIn with referenced values', (t) => {
+test('rules can use notIn with referenced values', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -817,13 +780,13 @@ test('rules can use notIn with referenced values', (t) => {
     },
   };
 
-  t.true(enforce('readData', policy, { object: { key: 3, value: [1, 2] } }));
-  t.false(enforce('readData', policy, { object: { key: 1, value: [1, 2] } }));
-  t.false(enforce('readData', policy, { object: { key: 2, value: [1, 2] } }));
-  t.false(enforce('readData', policy, { object: { key: 3 } }));
+  expect(enforce('readData', policy, { object: { key: 3, value: [1, 2] } })).toBe(true);
+  expect(enforce('readData', policy, { object: { key: 1, value: [1, 2] } })).toBe(false);
+  expect(enforce('readData', policy, { object: { key: 2, value: [1, 2] } })).toBe(false);
+  expect(enforce('readData', policy, { object: { key: 3 } })).toBe(false);
 });
 
-test('rules can use startsWith operator with value', (t) => {
+test('rules can use startsWith operator with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -837,33 +800,15 @@ test('rules can use startsWith operator with value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, { object: { value: 'lifeomic/boo/foo' } }),
-    'enforce string'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: 'dd/lifeomic/boo/foo' } }),
-    'enforce ends string'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: undefined } }),
-    'enforce undefined'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: null } }),
-    'enforce null'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: 1 } }),
-    'enforce number'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: ' ' } }),
-    'enforce space'
-  );
+  expect(enforce('readData', policy, { object: { value: 'lifeomic/boo/foo' } })).toBe(true);
+  expect(enforce('readData', policy, { object: { value: 'dd/lifeomic/boo/foo' } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: undefined } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: null } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: 1 } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: ' ' } })).toBe(false);
 });
 
-test('rules can use startsWith operator with no value', (t) => {
+test('rules can use startsWith operator with no value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -876,13 +821,10 @@ test('rules can use startsWith operator with no value', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, { object: { value: 'foo' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { value: 'foo' } })).toBe(false);
 });
 
-test('rules can use startsWith operator with no target value', (t) => {
+test('rules can use startsWith operator with no target value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -896,13 +838,10 @@ test('rules can use startsWith operator with no target value', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, { object: { value: 'foo' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { value: 'foo' } })).toBe(false);
 });
 
-test('rules can use startsWith operator with with target value', (t) => {
+test('rules can use startsWith operator with with target value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -916,13 +855,10 @@ test('rules can use startsWith operator with with target value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, { object: { id: 'foo!', value: 'foo!' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { id: 'foo!', value: 'foo!' } })).toBe(true);
 });
 
-test('rules can use endsWith operator with value', (t) => {
+test('rules can use endsWith operator with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -936,35 +872,17 @@ test('rules can use endsWith operator with value', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, {
-      object: { value: 'lifeomic/boo/foo/bar/bar' },
-    }),
-    'enforce string'
-  );
-  t.true(
-    enforce('readData', policy, { object: { value: 'dd/lifeomic/boo/foo' } }),
-    'enforce ends string'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: undefined } }),
-    'enforce undefined'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: null } }),
-    'enforce null'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: 1 } }),
-    'enforce number'
-  );
-  t.false(
-    enforce('readData', policy, { object: { value: ' ' } }),
-    'enforce space'
-  );
+  expect(enforce('readData', policy, {
+    object: { value: 'lifeomic/boo/foo/bar/bar' },
+  })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: 'dd/lifeomic/boo/foo' } })).toBe(true);
+  expect(enforce('readData', policy, { object: { value: undefined } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: null } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: 1 } })).toBe(false);
+  expect(enforce('readData', policy, { object: { value: ' ' } })).toBe(false);
 });
 
-test('rules can use endsWith operator with no value', (t) => {
+test('rules can use endsWith operator with no value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -977,13 +895,10 @@ test('rules can use endsWith operator with no value', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, { object: { value: 'foo' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { value: 'foo' } })).toBe(false);
 });
 
-test('rules can use endsWith operator with no target value', (t) => {
+test('rules can use endsWith operator with no target value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -997,13 +912,10 @@ test('rules can use endsWith operator with no target value', (t) => {
     },
   };
 
-  t.false(
-    enforce('readData', policy, { object: { value: 'foo' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { value: 'foo' } })).toBe(false);
 });
 
-test('rules can use endsWith operator with with target value', (t) => {
+test('rules can use endsWith operator with with target value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1017,13 +929,10 @@ test('rules can use endsWith operator with with target value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, { object: { id: 'foo!', value: 'foo!' } }),
-    'enforce string'
-  );
+  expect(enforce('readData', policy, { object: { id: 'foo!', value: 'foo!' } })).toBe(true);
 });
 
-test('rules can use notIncludes operator with value', (t) => {
+test('rules can use notIncludes operator with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1037,44 +946,35 @@ test('rules can use notIncludes operator with value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { sauces: ['ketchup', 'mustard'] },
-    }),
-    'returns true when the value is not included'
-  );
+  expect(enforce('readData', policy, {
+    patient: { sauces: ['ketchup', 'mustard'] },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { sauces: ['ketchup', 'forbidden-sauce'] },
-    }),
-    'returns false when the value is included'
-  );
+  expect(enforce('readData', policy, {
+    patient: { sauces: ['ketchup', 'forbidden-sauce'] },
+  })).toBe(false);
 
-  t.false(
-    enforce(
-      'readData',
-      {
-        rules: {
-          readData: [
-            {
-              'patient.sauces': {
-                comparison: 'notIncludes',
-                value: undefined,
-              },
+  expect(enforce(
+    'readData',
+    {
+      rules: {
+        readData: [
+          {
+            'patient.sauces': {
+              comparison: 'notIncludes',
+              value: undefined,
             },
-          ],
-        },
+          },
+        ],
       },
-      {
-        patient: { sauces: ['ketchup', 'forbidden-sauce'] },
-      }
-    ),
-    'returns false when the value is undefined'
-  );
+    },
+    {
+      patient: { sauces: ['ketchup', 'forbidden-sauce'] },
+    },
+  )).toBe(false);
 });
 
-test('rules can use notIncludes operator with target', (t) => {
+test('rules can use notIncludes operator with target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1088,38 +988,29 @@ test('rules can use notIncludes operator with target', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        sauces: ['mustard', 'mayo'],
-      },
-    }),
-    'returns true when the target is not included'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      sauces: ['mustard', 'mayo'],
+    },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        sauces: ['mustard', 'mayo', 'ketchup'],
-      },
-    }),
-    'returns false when the target is included'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      sauces: ['mustard', 'mayo', 'ketchup'],
+    },
+  })).toBe(false);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        sauces: undefined,
-      },
-    }),
-    'returns false when the target is undefined'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      sauces: undefined,
+    },
+  })).toBe(false);
 });
 
-test('rules can use prefixOf operator with value', (t) => {
+test('rules can use prefixOf operator with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1133,29 +1024,20 @@ test('rules can use prefixOf operator with value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'honey' },
-    }),
-    'returns true when the prop value is a prefix of the value'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'honey' },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ranch' },
-    }),
-    'returns false when the prop value is not a prefix of the value'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ranch' },
+  })).toBe(false);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: undefined },
-    }),
-    'returns false when the prop value is undefined'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: undefined },
+  })).toBe(false);
 });
 
-test('rules can use prefixOf operator with target', (t) => {
+test('rules can use prefixOf operator with target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1169,38 +1051,29 @@ test('rules can use prefixOf operator with target', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'honey-mayo' },
-      resource: {
-        secretSauce: 'honey-mayo-spicy',
-      },
-    }),
-    'returns true when the prop value is a prefix of the target'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'honey-mayo' },
+    resource: {
+      secretSauce: 'honey-mayo-spicy',
+    },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        secretSauce: 'honey-mayo-spicy',
-      },
-    }),
-    'returns false when the prop value is not a prefix of the target'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      secretSauce: 'honey-mayo-spicy',
+    },
+  })).toBe(false);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        secretSauce: undefined,
-      },
-    }),
-    'returns false when the target is undefined'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      secretSauce: undefined,
+    },
+  })).toBe(false);
 });
 
-test('rules can use suffixOf operator with value', (t) => {
+test('rules can use suffixOf operator with value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1214,29 +1087,20 @@ test('rules can use suffixOf operator with value', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'mustard' },
-    }),
-    'returns true when the prop value is a suffix of the value'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'mustard' },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ranch' },
-    }),
-    'returns false when the prop value is not a prefix of the value'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ranch' },
+  })).toBe(false);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: undefined },
-    }),
-    'enforce undefined'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: undefined },
+  })).toBe(false);
 });
 
-test('rules can use suffixOf operator with target', (t) => {
+test('rules can use suffixOf operator with target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -1250,33 +1114,24 @@ test('rules can use suffixOf operator with target', (t) => {
     },
   };
 
-  t.true(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'mayo' },
-      resource: {
-        secretSauce: 'honey-mayo',
-      },
-    }),
-    'returns true when the prop value is a suffix of the target'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'mayo' },
+    resource: {
+      secretSauce: 'honey-mayo',
+    },
+  })).toBe(true);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        secretSauce: 'honey-mayo',
-      },
-    }),
-    'returns false when the prop value is not a suffix of the target'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      secretSauce: 'honey-mayo',
+    },
+  })).toBe(false);
 
-  t.false(
-    enforce('readData', policy, {
-      patient: { favoriteSauce: 'ketchup' },
-      resource: {
-        secretSauce: undefined,
-      },
-    }),
-    'returns false when the target is undefined'
-  );
+  expect(enforce('readData', policy, {
+    patient: { favoriteSauce: 'ketchup' },
+    resource: {
+      secretSauce: undefined,
+    },
+  })).toBe(false);
 });

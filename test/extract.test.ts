@@ -1,8 +1,7 @@
-import test from 'ava';
 import { extract, AbacPolicy } from '../src';
 import { randomUUID } from 'crypto';
 
-test('should return rule values', (t) => {
+test('should return rule values', () => {
   const expectedId1 = randomUUID();
   const expectedId2 = randomUUID();
   const policy: AbacPolicy = {
@@ -30,12 +29,12 @@ test('should return rule values', (t) => {
     },
   };
 
-  t.deepEqual(extract(policy, ['readData'], 'resource.cohorts'), [
+  expect(extract(policy, ['readData'], 'resource.cohorts')).toEqual([
     { value: [expectedId1, expectedId2], comparison: 'subset' },
   ]);
 });
 
-test('should return attribute values and comparison value only for privilege to be checked', (t) => {
+test('should return attribute values and comparison value only for privilege to be checked', () => {
   const expectedId1 = randomUUID();
   const expectedId2 = randomUUID();
   const policy: AbacPolicy = {
@@ -71,12 +70,12 @@ test('should return attribute values and comparison value only for privilege to 
     },
   };
 
-  t.deepEqual(extract(policy, ['writeData'], 'resource.cohorts'), [
+  expect(extract(policy, ['writeData'], 'resource.cohorts')).toEqual([
     { value: expectedId1, comparison: 'includes' },
   ]);
 });
 
-test('should return attribute values and comparison value for mutliple privileges', (t) => {
+test('should return attribute values and comparison value for mutliple privileges', () => {
   const expectedId1 = randomUUID();
   const expectedId2 = randomUUID();
   const policy: AbacPolicy = {
@@ -112,16 +111,13 @@ test('should return attribute values and comparison value for mutliple privilege
     },
   };
 
-  t.deepEqual(
-    extract(policy, ['readData', 'readMaskedData'], 'resource.cohorts'),
-    [
-      { value: expectedId1, comparison: 'includes' },
-      { value: [expectedId1, expectedId2], comparison: 'subset' },
-    ]
-  );
+  expect(extract(policy, ['readData', 'readMaskedData'], 'resource.cohorts')).toEqual([
+    { value: expectedId1, comparison: 'includes' },
+    { value: [expectedId1, expectedId2], comparison: 'subset' },
+  ]);
 });
 
-test('No rules should be extracted for a boolean operation', (t) => {
+test('No rules should be extracted for a boolean operation', () => {
   const expectedId1 = randomUUID();
   const expectedId2 = randomUUID();
   const policy: AbacPolicy = {
@@ -149,5 +145,5 @@ test('No rules should be extracted for a boolean operation', (t) => {
     },
   };
 
-  t.deepEqual(extract(policy, ['writeData'], 'resource.cohorts'), []);
+  expect(extract(policy, ['writeData'], 'resource.cohorts')).toEqual([]);
 });

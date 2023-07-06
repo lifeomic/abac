@@ -1,3 +1,7 @@
+import { AbacRule } from './Rule';
+
+export type AbacRules = AbacRule[] | boolean;
+
 export const Rules = {
   $schema: 'http://json-schema.org/draft-07/schema#',
   $id: 'Rules',

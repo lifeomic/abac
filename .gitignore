@@ -1,11 +1,10 @@
 /node_modules/
 /yarn-error.log
 /.yarnclean
-/browser/
 .npmrc
 /.vscode/
 /test-report.xml
-/.nyc_output
+/coverage
 
 src/**/*.js
 src/**/*.cjs

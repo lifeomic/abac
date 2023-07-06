@@ -1,7 +1,6 @@
-import test from 'ava';
 import { privileges, privilegesLenient, AbacPolicy } from '../src';
 
-test('privileges should work', (t) => {
+test('privileges should work', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -25,23 +24,22 @@ test('privileges should work', (t) => {
     },
   };
 
-  t.deepEqual(privileges(policy), ['accessAdmin', 'readData']);
-  t.deepEqual(
+  expect(privileges(policy)).toEqual(['accessAdmin', 'readData']);
+  expect(
     privileges(policy, { resource: { ownerId: 'john' }, user: { id: 'jane' } }),
-    ['accessAdmin', 'readData']
-  );
-  t.deepEqual(privileges(policy, { resource: { dataset: 'project' } }), [
+  ).toEqual(['accessAdmin', 'readData']);
+  expect(privileges(policy, { resource: { dataset: 'project' } })).toEqual([
     'accessAdmin',
     'readData',
     'deleteData',
   ]);
-  t.deepEqual(privileges(policy, { resource: { dataset: 'project2' } }), [
+  expect(privileges(policy, { resource: { dataset: 'project2' } })).toEqual([
     'accessAdmin',
     'readData',
   ]);
 });
 
-test('privilegesLenient should work', (t) => {
+test('privilegesLenient should work', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -67,20 +65,17 @@ test('privilegesLenient should work', (t) => {
 
   // privilegesLenient does the best it can given incomplete information
   // and is permissive:
-  t.deepEqual(privilegesLenient(policy), [
+  expect(privilegesLenient(policy)).toEqual([
     'accessAdmin',
     'readData',
     'deleteData',
     'updateData',
   ]);
-  t.deepEqual(
-    privilegesLenient(policy, {
-      resource: { ownerId: 'john' },
-      user: { id: 'jane' },
-    }),
-    ['accessAdmin', 'readData', 'deleteData']
-  );
-  t.deepEqual(privilegesLenient(policy, { resource: { dataset: 'project' } }), [
+  expect(privilegesLenient(policy, {
+    resource: { ownerId: 'john' },
+    user: { id: 'jane' },
+  })).toEqual(['accessAdmin', 'readData', 'deleteData']);
+  expect(privilegesLenient(policy, { resource: { dataset: 'project' } })).toEqual([
     'accessAdmin',
     'readData',
     'deleteData',
@@ -88,18 +83,12 @@ test('privilegesLenient should work', (t) => {
   ]);
 
   // given full information, privilegesLenient gives correct answers:
-  t.deepEqual(
-    privilegesLenient(policy, {
-      resource: { dataset: 'project', ownerId: 'john' },
-      user: { id: 'john' },
-    }),
-    ['accessAdmin', 'readData', 'deleteData', 'updateData']
-  );
-  t.deepEqual(
-    privilegesLenient(policy, {
-      resource: { dataset: 'project2', ownerId: 'john' },
-      user: { id: 'jane' },
-    }),
-    ['accessAdmin', 'readData']
-  );
+  expect(privilegesLenient(policy, {
+    resource: { dataset: 'project', ownerId: 'john' },
+    user: { id: 'john' },
+  })).toEqual(['accessAdmin', 'readData', 'deleteData', 'updateData']);
+  expect(privilegesLenient(policy, {
+    resource: { dataset: 'project2', ownerId: 'john' },
+    user: { id: 'jane' },
+  })).toEqual(['accessAdmin', 'readData']);
 });

@@ -2,8 +2,8 @@ import * as schemas from './schemas';
 import Ajv from 'ajv';
 import deepEqual from 'deep-equal';
 import deepClone from 'deep-clone';
-import type { AbacComparison, AbacPolicy, AbacRule } from './types';
-export * from './types';
+import type { AbacComparison, AbacPolicy, AbacRule, AbacReduceOptions } from './schemas';
+export type * from './schemas';
 
 const ajv = new Ajv({
   schemas: Object.values(schemas),
@@ -34,8 +34,8 @@ const isString = (value: any): value is string =>
 const maybeReverseCondition = (
   pathToCheck: string,
   condition: AbacComparison,
-  attributes?: Record<string, any>
-) => {
+  attributes?: Record<string, any>,
+): { condition: AbacComparison; pathToCheck: string; } => {
   const noOp = {
     pathToCheck,
     condition,
@@ -43,13 +43,13 @@ const maybeReverseCondition = (
 
   if (
     !condition?.target ||
-    TARGETLESS_COMPARISON_OPERATORS.includes(condition.comparison)
+    TARGETLESS_COMPARISON_OPERATORS.includes(condition.comparison as string)
   ) {
     return noOp;
   }
 
   const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
-  const originalTargetValue = getAttribute(attributes, condition.target);
+  const originalTargetValue = getAttribute(attributes, condition.target as string);
 
   if (
     originalPathToCheckValue !== undefined &&
@@ -58,7 +58,7 @@ const maybeReverseCondition = (
     return {
       pathToCheck: condition.target,
       condition: {
-        comparison: COMPARISON_REVERSION_MAP[condition.comparison],
+        comparison: COMPARISON_REVERSION_MAP[condition.comparison as any as keyof typeof COMPARISON_REVERSION_MAP],
         target: pathToCheck,
       },
     };
@@ -77,7 +77,7 @@ const maybeReverseCondition = (
  */
 const validateJsonSchema = (
   schemaName: string,
-  policy: Record<string, any>
+  policy: Record<string, any>,
 ): true => {
   const valid = ajv.validate(schemaName, policy) as boolean;
 
@@ -130,7 +130,7 @@ export const merge = (policies: AbacPolicy[]): AbacPolicy => {
 export const extract = (
   policy: AbacPolicy,
   privileges: string[],
-  attribute: string
+  attribute: string,
 ) => {
   validate(policy);
   const comparisons = Object.entries(policy.rules)
@@ -148,7 +148,7 @@ export const extract = (
  */
 const getAttributeValues = (
   attributes: Record<string, any> | null | undefined,
-  path: string[]
+  path: string[],
 ): any[] => {
   if (attributes === undefined || attributes === null) {
     return [];
@@ -168,7 +168,7 @@ const getAttributeValues = (
       for (const key of keys) {
         const result = getAttributeValues(
           attributes[key] as Record<string, any>,
-          path.slice(1)
+          path.slice(1),
         );
 
         // If a single sub-path fails to evaluate fail the entire traversal.
@@ -184,13 +184,13 @@ const getAttributeValues = (
     case '%keys':
       return getAttributeValues(
         Object.keys(attributes as Record<string, any>),
-        path.slice(1)
+        path.slice(1),
       );
     default:
       const unescapedName = name.replace(/^%%/, '%');
       return getAttributeValues(
         attributes[unescapedName] as Record<string, any>,
-        path.slice(1)
+        path.slice(1),
       );
   }
 };
@@ -203,7 +203,7 @@ const getAttributeValues = (
  */
 const getAttribute = (
   attributes: Record<string, any> | undefined,
-  path: string
+  path: string,
 ) => {
   const name = path.split('.');
   return getAttributeValues(attributes, name)[0];
@@ -211,7 +211,7 @@ const getAttribute = (
 
 const getCompareValue = (
   condition: AbacComparison,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ) => {
   if ('target' in condition) {
     return getAttribute(attributes, condition.target as string);
@@ -220,18 +220,15 @@ const getCompareValue = (
 };
 
 /**
- * @returns `true` if the comparision matches, `false` if there is a mismatch,
+ * @returns `true` if the comparison matches, `false` if there is a mismatch,
  *           and `undefined` if the target value is not known to compute the
  *           result.
  */
 const compare = (
-  condition: AbacComparison | undefined,
+  condition: AbacComparison,
   value?: any,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): boolean | undefined => {
-  if (!condition) {
-    return false;
-  }
   const compareValue = getCompareValue(condition, attributes);
 
   // "exists" can have an undefined value.
@@ -315,7 +312,7 @@ const isSubpath = (compare: string, subject: string) => {
 const reduceRule = (
   rule: AbacRule,
   attributes?: Record<string, any>,
-  inlineTargets?: string[]
+  inlineTargets?: string[],
 ): AbacRule | boolean => {
   const result: AbacRule = {};
 
@@ -323,7 +320,7 @@ const reduceRule = (
     const { pathToCheck, condition } = maybeReverseCondition(
       key,
       value,
-      attributes
+      attributes,
     );
 
     // When we already know the value of the target, we replace it with an
@@ -332,15 +329,13 @@ const reduceRule = (
       condition?.target &&
       inlineTargets &&
       inlineTargets.some((inlineTarget) =>
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        isSubpath(condition!.target as string, inlineTarget)
+        isSubpath(condition.target as string, inlineTarget),
       )
     ) {
-      const inLineTargetValue = getAttribute(attributes, condition.target);
+      const inLineTargetValue = getAttribute(attributes, condition.target as string);
 
       if (inLineTargetValue) {
-        // @ts-ignore-error
-        newCondition.value = inLineTargetValue;
+        condition.value = inLineTargetValue;
         delete condition.target;
       }
     }
@@ -371,9 +366,9 @@ const reduceRule = (
 };
 
 const reduceRules = (
-  rules: AbacRule[] | boolean | undefined,
+  rules: AbacRule[] | boolean,
   attributes?: Record<string, any>,
-  inlineTargets?: string[]
+  inlineTargets?: string[],
 ) => {
   const attributesClone = deepClone(attributes);
 
@@ -381,8 +376,6 @@ const reduceRules = (
 
   if (rules === true || rules === false) {
     return rules;
-  } else if (rules === undefined) {
-    return false;
   }
 
   for (const rule of deepClone(rules)) {
@@ -415,14 +408,13 @@ const reduceRules = (
  * should be eagerly evaluated when reducing the policy. Eager evaluation makes
  * sure that a rule with a known target will be inverted and replaced with the
  * known value in-line.
- * @returns {object} the policy reduced to conditions involving attributes not
- * not given
+ * @returns {object} the policy reduced to conditions involving attributes not given
  * @throws {Error} if the policy is invalid
  */
 export const reduce = (
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-  options: { inlineTargets?: string[] } = {}
+  options: AbacReduceOptions = {},
 ): AbacPolicy => {
   validate(policy);
   validateJsonSchema('ReduceOptions', options);
@@ -452,7 +444,7 @@ export const reduce = (
 export const enforce = (
   operationName: string,
   policy: AbacPolicy,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): boolean => {
   try {
     // Before using the policy, make sure it's valid
@@ -486,7 +478,7 @@ export const enforce = (
 export const enforceLenient = (
   operationName: string,
   policy: AbacPolicy,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): boolean => {
   try {
     // Before using the policy, make sure it's valid
@@ -516,7 +508,7 @@ export const enforceLenient = (
 export const enforceAny = (
   operationNames: string[],
   policy: AbacPolicy,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): boolean | string => {
   for (const operation of operationNames) {
     if (enforce(operation, policy, attributes)) {
@@ -538,7 +530,7 @@ export const enforceAny = (
  */
 export const privileges = (
   policy: AbacPolicy,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules)
@@ -559,7 +551,7 @@ export const privileges = (
  */
 export const privilegesLenient = (
   policy: AbacPolicy,
-  attributes?: Record<string, any>
+  attributes?: Record<string, any>,
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules).map(([privilege]) => privilege);
@@ -596,7 +588,7 @@ const isPathPrefix = (left: string, right: string) => {
  */
 export const policyRequiresAttribute = (
   policy: AbacPolicy,
-  attribute: string
+  attribute: string,
 ): boolean => {
   const rules = Object.values(policy.rules)
     .filter((rule): rule is AbacRule[] => Array.isArray(rule))
@@ -607,7 +599,7 @@ export const policyRequiresAttribute = (
       if (isPathPrefix(attribute, key)) {
         return true;
       }
-      const target = rule[key]?.target;
+      const target = rule[key]?.target as string;
       if (target && isPathPrefix(attribute, target)) {
         return true;
       }
