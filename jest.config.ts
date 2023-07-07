@@ -26,11 +26,6 @@ const config: Config.InitialOptions = {
   verbose: true,
   testMatch: ['<rootDir>/test/**/*.test.ts'],
   testTimeout,
-  globals: {
-    'ts-jest': {
-      'useESM': true,
-    },
-  },
 };
 
 export default config;

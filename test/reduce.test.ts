@@ -589,7 +589,7 @@ test('validates reduce options', () => {
     { user: { groups: [] } },
     // @ts-expect-error
     [],
-  )).toThrow('data should be object');
+  )).toThrow(/data (should|must) be object/);
 
   expect(() =>
     reduce(
@@ -600,18 +600,18 @@ test('validates reduce options', () => {
         invalidOption: ['1'],
         inlineTargets: ['user.customAttributes'],
       },
-    )).toThrow('data should NOT have additional properties');
+    )).toThrow(/data (should|must) NOT have additional properties/);
   expect(() => reduce(
     policy,
     { user: { groups: [] } },
     // @ts-expect-error A single entry is required
     { inlineTargets: [] },
   ))
-    .toThrow('data.inlineTargets should NOT have fewer than 1 items');
+    .toThrow(/data[./]inlineTargets (should|must) NOT have fewer than 1 items/);
   expect(() =>
     // @ts-expect-error
     reduce(policy, { user: { groups: [] } }, { inlineTargets: [{ id: 1 }] }))
-    .toThrow('data.inlineTargets[0] should be string');
+    .toThrow(/data[./]inlineTargets(\[0]|\/0) (should|must) be string/);
   expect(() =>
     reduce(policy, { user: { groups: [] } }, { inlineTargets: ['1'] })).not.toThrow();
 });
