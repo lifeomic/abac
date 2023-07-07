@@ -1,7 +1,6 @@
-import test from 'ava';
 import { validate, AbacPolicy } from '../src';
 
-test('RFC example should validate', (t) => {
+test('RFC example should validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -44,10 +43,10 @@ test('RFC example should validate', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('target should support wildcards', (t) => {
+test('target should support wildcards', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -61,10 +60,10 @@ test('target should support wildcards', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('equals and notEquals should support bools', (t) => {
+test('equals and notEquals should support bools', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
@@ -84,10 +83,10 @@ test('equals and notEquals should support bools', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('All access should validate', (t) => {
+test('All access should validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -102,16 +101,16 @@ test('All access should validate', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('No access should validate', (t) => {
+test('No access should validate', () => {
   const policy = { rules: {} };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('Unknown operation should validate', (t) => {
+test('Unknown operation should validate', () => {
   const policy: AbacPolicy = {
     rules: {
       root: [
@@ -125,10 +124,10 @@ test('Unknown operation should validate', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('Unknown comparison field should not validate', (t) => {
+test('Unknown comparison field should not validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -136,7 +135,6 @@ test('Unknown comparison field should not validate', (t) => {
           'user.groups': {
             comparison: 'includes',
             value: '1af3ed70-018b-46cc-ba41-7b731fcb182f',
-            // @ts-expect-error
             type: 'string',
           },
         },
@@ -144,10 +142,10 @@ test('Unknown comparison field should not validate', (t) => {
     },
   };
 
-  t.throws(() => validate(policy), { instanceOf: Error });
+  expect(() => validate(policy)).toThrow();
 });
 
-test('Missing comparison field should not validate', (t) => {
+test('Missing comparison field should not validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -160,10 +158,10 @@ test('Missing comparison field should not validate', (t) => {
     },
   };
 
-  t.throws(() => validate(policy), { instanceOf: Error });
+  expect(() => validate(policy)).toThrow();
 });
 
-test('Wrong value type should not validate', (t) => {
+test('Wrong value type should not validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [
@@ -178,25 +176,24 @@ test('Wrong value type should not validate', (t) => {
     },
   };
 
-  t.throws(() => validate(policy), { instanceOf: Error });
+  expect(() => validate(policy)).toThrow();
 });
 
-test('Empty rule list should not validate', (t) => {
+test('Empty rule list should not validate', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: [],
     },
   };
 
-  t.throws(() => validate(policy), { instanceOf: Error });
+  expect(() => validate(policy)).toThrow();
 });
 
-test('Rejects policies containing both target and value keys', (t) => {
+test('Rejects policies containing both target and value keys', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
-          // @ts-expect-error Allow reading if the current user is the owner
           'resource.ownerId': {
             comparison: 'equals',
             target: 'user.id',
@@ -207,10 +204,10 @@ test('Rejects policies containing both target and value keys', (t) => {
     },
   };
 
-  t.throws(() => validate(policy), { instanceOf: Error });
+  expect(() => validate(policy)).toThrow();
 });
 
-test('A policy with LIFE operations is allowed', (t) => {
+test('A policy with LIFE operations is allowed', () => {
   const policy: AbacPolicy = {
     rules: {
       createLifeData: true,
@@ -220,10 +217,10 @@ test('A policy with LIFE operations is allowed', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('A policy with a new operation is allowed', (t) => {
+test('A policy with a new operation is allowed', () => {
   const policy: AbacPolicy = {
     rules: {
       someNewThing: true,
@@ -231,15 +228,14 @@ test('A policy with a new operation is allowed', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('Allows policies containing unknown comparisons and target', (t) => {
+test('Allows policies containing unknown comparisons and target', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
-          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
             target: 'user.favoriteDrink',
@@ -249,15 +245,14 @@ test('Allows policies containing unknown comparisons and target', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('Allows policies containing unknown comparisons and value', (t) => {
+test('Allows policies containing unknown comparisons and value', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
-          // @ts-expect-error
           'resource.type': {
             comparison: 'not-entirely-unlike',
             value: 'tea',
@@ -267,17 +262,16 @@ test('Allows policies containing unknown comparisons and value', (t) => {
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });
 
-test('Allows policies containing unknown comparisons and arbitrary other fields', (t) => {
+test('Allows policies containing unknown comparisons and arbitrary other fields', () => {
   const policy: AbacPolicy = {
     rules: {
       readData: [
         {
           'resource.type': {
             comparison: 'not-entirely-unlike',
-            // @ts-expect-error
             flavor: 'tea',
           },
         },
@@ -285,5 +279,5 @@ test('Allows policies containing unknown comparisons and arbitrary other fields'
     },
   };
 
-  t.true(validate(policy));
+  expect(validate(policy)).toBe(true);
 });

@@ -6,16 +6,6 @@ on:
       - master
 
 jobs:
-  unpublish:
-    runs-on: ubuntu-latest
-    environment: npm
-    steps:
-      - env:
-          NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-      - run: npm deprecate @lifeomic/abac@4.10.0 "Broken output"
-      - run: npm deprecate @lifeomic/abac@4.10.1 "Broken output"
-      - run: npm deprecate @lifeomic/abac@4.10.2 "Node version too high"
   build:
     runs-on: ubuntu-latest
     environment: npm

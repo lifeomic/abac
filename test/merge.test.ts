@@ -1,7 +1,6 @@
 import { merge, AbacPolicy } from '../src';
-import test from 'ava';
 
-test('Two halves of the RFC example should merge to produce the full example', (t) => {
+test('Two halves of the RFC example should merge to produce the full example', () => {
   const policies: AbacPolicy[] = [
     {
       rules: {
@@ -96,13 +95,13 @@ test('Two halves of the RFC example should merge to produce the full example', (
 
   const original = JSON.parse(JSON.stringify(policies));
 
-  t.deepEqual(merge(policies), expected);
+  expect(merge(policies)).toEqual(expected);
 
   // The original policies should be unchanged:
-  t.deepEqual(policies, original);
+  expect(policies).toEqual(original);
 });
 
-test('rules that are true should trump all others', (t) => {
+test('rules that are true should trump all others', () => {
   const policies: AbacPolicy[] = [
     {
       rules: {
@@ -139,10 +138,10 @@ test('rules that are true should trump all others', (t) => {
     },
   };
 
-  t.deepEqual(merge(policies), expected);
+  expect(merge(policies)).toEqual(expected);
 });
 
-test('merging a single policy should produce the single policy', (t) => {
+test('merging a single policy should produce the single policy', () => {
   const policy: AbacPolicy = {
     rules: {
       accessAdmin: true,
@@ -157,9 +156,9 @@ test('merging a single policy should produce the single policy', (t) => {
     },
   };
 
-  t.deepEqual(merge([policy]), policy);
+  expect(merge([policy])).toEqual(policy);
 });
 
-test('merging nothing should produce a deny all policy', (t) => {
-  t.deepEqual(merge([]), { rules: {} });
+test('merging nothing should produce a deny all policy', () => {
+  expect(merge([])).toEqual({ rules: {} });
 });
