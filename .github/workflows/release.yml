@@ -6,16 +6,6 @@ on:
       - master
 
 jobs:
-  unpublish:
-    runs-on: ubuntu-latest
-    environment: npm
-    steps:
-      - env:
-          NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-      - run: npm unpublish @lifeomic/abac@4.10.0
-      - run: npm unpublish @lifeomic/abac@4.10.1
-      - run: npm unpublish @lifeomic/abac@4.10.2
   build:
     runs-on: ubuntu-latest
     environment: npm
