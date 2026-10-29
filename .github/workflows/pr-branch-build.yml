@@ -5,17 +5,71 @@ on: pull_request
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: AJV ${{ matrix.ajv-version }}
+    name: Node ${{ matrix.node-version }}, AJV ${{ matrix.ajv-version }}
+    continue-on-error: ${{ matrix.experimental }}
     strategy:
+      fail-fast: false
       matrix:
-        ajv-version: [6, 7, 8]
+        node-version: [24, 26]
+        ajv-version: [8]
+        experimental: [false]
+        include:
+          - node-version: 24
+            ajv-version: 6
+            experimental: false
+          - node-version: 24
+            ajv-version: 7
+            experimental: false
+          - node-version: 22
+            ajv-version: 8
+            experimental: true
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'yarn'
-      - run: yarn
-      - run: yarn add ajv@${{ matrix.ajv-version }}
-      - run: yarn test
-      - run: npm publish --dry-run
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - if: matrix.ajv-version != 8
+        run: pnpm add --save-dev ajv@${{ matrix.ajv-version }}
+      - run: pnpm test
+      - run: npm publish --dry-run --tag ci
+
+  compat-build:
+    runs-on: ubuntu-latest
+    name: Build and pack
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+      - run: pnpm run --if-present compat:check
+      - run: npm pack
+      - uses: actions/upload-artifact@v4
+        with:
+          name: compat-package
+          path: |
+            lifeomic-abac-*.tgz
+            scripts/compat/
+
+  runtime-smoke:
+    needs: compat-build
+    runs-on: ubuntu-latest
+    name: Runtime smoke on Node ${{ matrix.node-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [14, 16, 18, 20, 22]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: compat-package
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: sh scripts/compat/runtime-smoke.sh

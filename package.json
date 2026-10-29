@@ -39,9 +39,10 @@
   "license": "MIT",
   "scripts": {
     "clean": "./clean.sh",
-    "prepublishOnly": "yarn ts-node esBuild.ts && yarn tsc --project tsconfig.build.json",
+    "build": "ts-node esBuild.ts && tsc --project tsconfig.build.json",
+    "prepublishOnly": "pnpm run build",
     "lint": "eslint src test",
-    "pretest": "yarn lint",
+    "pretest": "pnpm run lint",
     "test": "jest"
   },
   "dependencies": {
@@ -81,7 +82,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "resolutions": {
-    "jackspeak": "2.1.1"
-  }
+  "packageManager": "pnpm@12.15.0"
 }

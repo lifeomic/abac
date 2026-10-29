@@ -10,17 +10,18 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'yarn'
+          node-version-file: .nvmrc
+          cache: 'pnpm'
       - run: |
-          yarn install
-          yarn test
+          pnpm install --frozen-lockfile
+          pnpm test
       - env:
           NPM_TOKEN: ${{ secrets.LIFEOMIC_NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          yarn semantic-release
+          pnpm exec semantic-release
