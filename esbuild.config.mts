@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { build } from 'esbuild';
 import { globSync } from 'glob';
 import semver from 'semver';
@@ -11,6 +13,26 @@ const nodeVersion = semver.minVersion(packageJson.engines.node, { loose: false }
 if (!nodeVersion) {
   throw new Error('Missing engines.node version from package.json');
 }
+
+const toMjsSpecifier = (file: string, specifier: string) => {
+  const base = join(dirname(file), specifier);
+  if (existsSync(`${base}.ts`)) return `${specifier}.mjs`;
+  if (existsSync(join(base, 'index.ts'))) return `${specifier}/index.mjs`;
+  throw new Error(`Cannot resolve ${specifier} from ${file}`);
+};
+
+const writeWithMjsSpecifiers = ({ outputFiles = [] }: { outputFiles?: { path: string; text: string }[] }) => {
+  for (const { path, text } of outputFiles) {
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(
+      path,
+      text.replace(
+        /(\bfrom\s*|\bimport\s*\(?\s*)"(\.{1,2}\/[^"]+)"/g,
+        (_, prefix: string, specifier: string) => `${prefix}"${toMjsSpecifier(path, specifier)}"`,
+      ),
+    );
+  }
+};
 
 await Promise.all([
   build({
@@ -33,7 +55,8 @@ await Promise.all([
       '.js': '.mjs',
     },
     entryPoints,
-  }),
+    write: false,
+  }).then(writeWithMjsSpecifiers),
   build({
     bundle: true,
     platform: 'browser',

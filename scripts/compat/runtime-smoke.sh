@@ -7,9 +7,10 @@ mkdir -p smoke
 cd smoke
 npm init -y >/dev/null
 npm install --no-audit --no-fund "$package" abac-published@npm:@lifeomic/abac@5.0.0
-cp ../scripts/compat/cases.cjs ../scripts/compat/smoke.cjs .
+cp ../scripts/compat/cases.cjs ../scripts/compat/smoke.cjs ../scripts/compat/subpaths.mjs .
 
 for ajv in 6 7 8; do
   npm install --no-audit --no-fund "ajv@$ajv"
   node smoke.cjs
+  node subpaths.mjs
 done

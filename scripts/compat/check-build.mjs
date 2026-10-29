@@ -2,6 +2,9 @@ import { execFileSync } from 'node:child_process';
 import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
+import { gzipSync } from 'node:zlib';
+
+import { build } from 'esbuild';
 
 const root = join(import.meta.dirname, '..', '..');
 const require = createRequire(join(root, 'package.json'));
@@ -64,3 +67,66 @@ writeFileSync(
 
 runTsc(join(workDir, 'check.ts'), { module: 'commonjs', moduleResolution: 'node10' });
 console.log('declarations are type-equivalent to 5.0.0');
+
+const consumerDir = join(workDir, 'consumer');
+const installedDir = join(consumerDir, 'node_modules', '@lifeomic', 'abac');
+const [{ files: packedFiles }] = JSON.parse(execFileSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], { cwd: root, encoding: 'utf8' }));
+for (const { path } of packedFiles) {
+  mkdirSync(dirname(join(installedDir, path)), { recursive: true });
+  cpSync(join(root, path), join(installedDir, path));
+}
+writeFileSync(join(consumerDir, 'package.json'), '{ "private": true }\n');
+
+for (const script of ['cases.cjs', 'subpaths.mjs']) {
+  cpSync(join(import.meta.dirname, script), join(consumerDir, script));
+}
+execFileSync(process.execPath, [join(consumerDir, 'subpaths.mjs')], { cwd: consumerDir, stdio: ['ignore', 'inherit', 'inherit'] });
+
+const slim = await build({
+  stdin: { contents: "export { enforceLenient } from '@lifeomic/abac/enforce-lenient';", resolveDir: consumerDir },
+  bundle: true,
+  minify: true,
+  format: 'esm',
+  platform: 'browser',
+  write: false,
+  metafile: true,
+});
+const slimGzip = gzipSync(slim.outputFiles[0].text).length;
+const slimInputs = Object.keys(slim.metafile.inputs).join('\n');
+if (slimGzip >= 2048 || /\b(ajv|deep-equal)\b/.test(slimInputs)) {
+  throw new Error(`enforce-lenient bundle is ${slimGzip} bytes gzipped from\n${slimInputs}`);
+}
+console.log(`@lifeomic/abac/enforce-lenient bundles to ${slimGzip} bytes gzipped without ajv or deep-equal`);
+
+writeFileSync(
+  join(consumerDir, 'resolve.ts'),
+  [
+    "import { enforce, validate as rootValidate, type AbacPolicy as RootPolicy } from '@lifeomic/abac';",
+    "import { enforceLenient } from '@lifeomic/abac/enforce-lenient';",
+    "import { validate } from '@lifeomic/abac/validate';",
+    "import type { AbacPolicy, AbacRule, AbacComparison } from '@lifeomic/abac/types';",
+    'const policy: AbacPolicy = { rules: { readData: true } };',
+    'const rule: AbacRule | AbacComparison | undefined = undefined;',
+    'const same: RootPolicy = policy;',
+    'export const results = [enforce("readData", same), enforceLenient("readData", policy), validate(policy), rootValidate(policy), rule];',
+    '',
+  ].join('\n'),
+);
+for (const [module, moduleResolution] of [['commonjs', 'node10'], ['node16', 'node16'], ['esnext', 'bundler']]) {
+  execFileSync(
+    process.execPath,
+    [
+      join(root, 'node_modules', 'typescript', 'bin', 'tsc'),
+      '--noEmit',
+      '--strict',
+      '--skipLibCheck',
+      '--module',
+      module,
+      '--moduleResolution',
+      moduleResolution,
+      join(consumerDir, 'resolve.ts'),
+    ],
+    { stdio: 'inherit' },
+  );
+}
+console.log('root and subpath types resolve under node10, node16, and bundler');

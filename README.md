@@ -8,7 +8,7 @@ This module is suitable for use in both UIs and backend node.js services.
 ## Installation
 
 ```bash
-npm install @lifeomic/abac
+npm install @lifeomic/abac ajv
 ```
 
 ## Terminology
@@ -52,6 +52,26 @@ abac.policyRequiresAttribute(policy, attribute);
 ```
 
 See unit tests in `/test` folder - many good examples.
+
+### Smaller imports
+
+The root import validates every policy with `ajv`, which most browser bundles
+do not need. These subpaths load only what they export:
+
+```typescript
+import type { AbacPolicy } from '@lifeomic/abac/types';
+import { enforceLenient } from '@lifeomic/abac/enforce-lenient';
+import { validate } from '@lifeomic/abac/validate';
+```
+
+- `@lifeomic/abac/enforce-lenient` skips schema validation and never loads
+  `ajv`. Use it only for policies a server already validated. It never throws,
+  and returns `false` when `policy.rules` is not an object. For a valid policy it
+  returns what `enforceLenient` from `@lifeomic/abac` returns. It is under 2 KB
+  minified and gzipped.
+- `@lifeomic/abac/validate` exports `validate` with the same errors as the root
+  import, using your installed `ajv`.
+- `@lifeomic/abac/types` exports the policy types and no runtime code.
 
 ## Development
 

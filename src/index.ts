@@ -1,5 +1,6 @@
 import type { AbacPolicy, AbacReduceOptions, AbacRule } from './schemas';
 import { isPathPrefix } from './core/attributes';
+import { allows, mightAllow } from './core/enforce';
 import { reduceRules } from './core/reduce';
 import { validate, validateJsonSchema } from './validation';
 
@@ -114,11 +115,7 @@ export const enforce = (
     return false;
   }
 
-  const rules =
-    policy.rules && policy.rules[operationName]
-      ? policy.rules[operationName]
-      : [];
-  return reduceRules(rules, attributes) === true;
+  return allows(operationName, policy, attributes);
 };
 
 /**
@@ -148,12 +145,7 @@ export const enforceLenient = (
     return false;
   }
 
-  const rules =
-    policy.rules && policy.rules[operationName]
-      ? policy.rules[operationName]
-      : [];
-  const reducedRules = reduceRules(rules, attributes);
-  return reducedRules && (reducedRules === true || reducedRules.length > 0);
+  return mightAllow(operationName, policy, attributes);
 };
 
 /**
