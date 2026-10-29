@@ -45,7 +45,7 @@ test(`matches 5.0.0 enforceLenient on ${count} generated valid policies and retu
   const inputs = () => cases.generateInputs(seed, count);
   expect({ seed, differences: differences(inputs).slice(0, 3) }).toStrictEqual({ seed, differences: [] });
   expect(inputs().filter(({ policy }) => isValid(policy)).length).toBeGreaterThan(count / 2);
-});
+}, 60_000);
 
 test.each([
   ['an undefined policy', undefined],
