@@ -1,7 +1,6 @@
-import deepEqual from 'deep-equal';
-
 import type { AbacComparison } from '../schemas';
 import { getAttribute } from './attributes';
+import { looseEqual } from './looseEqual';
 
 const isString = (value: any): value is string =>
   typeof value === 'string' || value instanceof String;
@@ -43,13 +42,13 @@ export const compare = (
       );
 
     case 'equals':
-      return deepEqual(value, compareValue);
+      return looseEqual(value, compareValue);
 
     case 'exists':
       return value !== undefined;
 
     case 'notEquals':
-      return !deepEqual(value, compareValue);
+      return !looseEqual(value, compareValue);
 
     case 'notIn':
       return (

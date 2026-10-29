@@ -169,9 +169,6 @@ importers:
       deep-clone:
         specifier: ^3.0.3
         version: 3.0.3
-      deep-equal:
-        specifier: ^2.2.1
-        version: 2.2.3
     devDependencies:
       '@lifeomic/eslint-config-standards':
         specifier: 3.1.0
@@ -203,6 +200,9 @@ importers:
       conventional-changelog-conventionalcommits:
         specifier: ^5.0.0
         version: 5.0.0
+      deep-equal:
+        specifier: 2.2.3
+        version: 2.2.3
       esbuild:
         specifier: ^0.25.0
         version: 0.25.0
