@@ -39,7 +39,7 @@
   "license": "MIT",
   "scripts": {
     "clean": "./clean.sh",
-    "build": "ts-node esBuild.ts && tsc --project tsconfig.build.json",
+    "build": "node esbuild.config.mts && tsc --project tsconfig.build.json",
     "prepublishOnly": "pnpm run build",
     "lint": "eslint src test",
     "pretest": "pnpm run lint",

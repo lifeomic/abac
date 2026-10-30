@@ -8,7 +8,7 @@ This module is suitable for use in both UIs and backend node.js services.
 ## Installation
 
 ```bash
-yarn install @lifeomic/abac
+npm install @lifeomic/abac
 ```
 
 ## Terminology
@@ -52,6 +52,18 @@ abac.policyRequiresAttribute(policy, attribute);
 ```
 
 See unit tests in `/test` folder - many good examples.
+
+## Development
+
+Use the Node version in `.nvmrc`. The build runs `esbuild.config.mts`
+directly with Node, which needs Node 22.18 or later; the published package
+still supports Node 14.
+
+```bash
+pnpm install
+pnpm test
+pnpm run build
+```
 
 ## Release process
 
