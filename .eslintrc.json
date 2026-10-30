@@ -8,6 +8,9 @@
     "node": true,
     "jest": true
   },
+  "settings": {
+    "jest": { "version": 29 }
+  },
   "parserOptions": {
     "ecmaVersion": 2022
   },
