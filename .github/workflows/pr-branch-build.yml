@@ -6,23 +6,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     name: Node ${{ matrix.node-version }}, AJV ${{ matrix.ajv-version }}
-    continue-on-error: ${{ matrix.experimental }}
     strategy:
       fail-fast: false
       matrix:
-        node-version: [24, 26]
+        node-version: [22, 24, 26]
         ajv-version: [8]
-        experimental: [false]
         include:
           - node-version: 24
             ajv-version: 6
-            experimental: false
           - node-version: 24
             ajv-version: 7
-            experimental: false
-          - node-version: 22
-            ajv-version: 8
-            experimental: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
