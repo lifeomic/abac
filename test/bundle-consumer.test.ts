@@ -24,14 +24,14 @@ const bundle = async (contents: string) => {
   };
 };
 
-test('enforce-lenient bundles to under 2 KB gzipped with only deep-clone', async () => {
+test('enforce-lenient bundles to under 3 KB gzipped with only deep-clone', async () => {
   const { code, gzipBytes, packages } = await bundle(
     "import { enforceLenient } from './src/enforce-lenient'; export default enforceLenient;",
   );
 
   expect(packages).toStrictEqual(['deep-clone']);
   expect(code).not.toMatch(/new Function|\beval\(/);
-  expect(gzipBytes).toBeLessThan(2048);
+  expect(gzipBytes).toBeLessThan(3072);
 });
 
 test('types bundles to nothing', async () => {

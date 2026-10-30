@@ -409,6 +409,25 @@ const compareImplementations = (expected, actual, makeInputs, label) => {
   return mismatches;
 };
 
+// Valid policies must match 5.0.0's enforceLenient; invalid ones only need a boolean.
+const enforceLenientMismatches = (published, enforceLenient, makeInputs) => {
+  const isValid = (policy) => {
+    try {
+      return published.validate(policy);
+    } catch (error) {
+      return false;
+    }
+  };
+  const expected = makeInputs().map(({ policy, operation, attributes }) =>
+    isValid(policy) ? published.enforceLenient(operation, policy, attributes) : 'invalid',
+  );
+  return makeInputs().flatMap(({ policy, operation, attributes }, index) => {
+    const actual = enforceLenient(operation, policy, attributes);
+    const matches = expected[index] === 'invalid' ? typeof actual === 'boolean' : actual === expected[index];
+    return matches ? [] : [{ index, policy, operation, attributes, expected: expected[index], actual }];
+  });
+};
+
 const exportKinds = (module) => Object.keys(module).sort().map((key) => [key, typeof module[key]]);
 
 const DEFAULT_SEED = 0xabac;
@@ -418,6 +437,7 @@ module.exports = {
   DEFAULT_COUNT,
   DEFAULT_SEED,
   compareImplementations,
+  enforceLenientMismatches,
   exportKinds,
   generateInputs,
   loosePairInputs,

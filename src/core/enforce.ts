@@ -1,5 +1,5 @@
 import type { AbacPolicy } from '../schemas';
-import { reduceRules } from './reduce';
+import { isPossible, reduceRules } from './reduce';
 
 const operationRules = (policy: AbacPolicy, operationName: string) =>
   policy.rules && policy.rules[operationName]
@@ -16,7 +16,4 @@ export const mightAllow = (
   operationName: string,
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-): boolean => {
-  const reducedRules = reduceRules(operationRules(policy, operationName), attributes);
-  return reducedRules && (reducedRules === true || reducedRules.length > 0);
-};
+): boolean => isPossible(reduceRules(operationRules(policy, operationName), attributes));

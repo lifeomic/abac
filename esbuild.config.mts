@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { build } from 'esbuild';
+import { build, type BuildResult } from 'esbuild';
 import { globSync } from 'glob';
 import semver from 'semver';
 import { esbuildPluginBrowserslist } from 'esbuild-plugin-browserslist';
@@ -14,14 +14,15 @@ if (!nodeVersion) {
   throw new Error('Missing engines.node version from package.json');
 }
 
-const toMjsSpecifier = (file: string, specifier: string) => {
-  const base = join(dirname(file), specifier);
-  if (existsSync(`${base}.ts`)) return `${specifier}.mjs`;
-  if (existsSync(join(base, 'index.ts'))) return `${specifier}/index.mjs`;
-  throw new Error(`Cannot resolve ${specifier} from ${file}`);
-};
+const writeWithMjsSpecifiers = ({ outputFiles = [] }: BuildResult) => {
+  const outputs = new Set(outputFiles.map(({ path }) => path));
+  const toMjsSpecifier = (file: string, specifier: string) => {
+    const base = join(dirname(file), specifier);
+    if (outputs.has(`${base}.mjs`)) return `${specifier}.mjs`;
+    if (outputs.has(join(base, 'index.mjs'))) return `${specifier}/index.mjs`;
+    throw new Error(`Cannot resolve ${specifier} from ${file}`);
+  };
 
-const writeWithMjsSpecifiers = ({ outputFiles = [] }: { outputFiles?: { path: string; text: string }[] }) => {
   for (const { path, text } of outputFiles) {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(

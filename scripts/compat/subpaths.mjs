@@ -1,7 +1,8 @@
 import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 
 const require = createRequire(import.meta.url);
-const { DEFAULT_SEED, generateInputs } = require('./cases.cjs');
+const { DEFAULT_SEED, enforceLenientMismatches, generateInputs } = require('./cases.cjs');
 const published = require('abac-published');
 
 const expected = {
@@ -22,24 +23,20 @@ for (const [specifier, names] of Object.entries(expected)) {
   }
 }
 
-const { enforceLenient } = await import('@lifeomic/abac/enforce-lenient');
-const { validate } = await import('@lifeomic/abac/validate');
-const isValid = (policy) => {
-  try {
-    return validate(policy);
-  } catch (error) {
-    return false;
+const packageDir = join(dirname(require.resolve('@lifeomic/abac')), '..');
+for (const subpath of ['enforce-lenient', 'validate', 'types']) {
+  const stub = require(join(packageDir, subpath));
+  if (JSON.stringify(exportNames(stub)) !== JSON.stringify(exportNames(require(`@lifeomic/abac/${subpath}`)))) {
+    throw new Error(`the ${subpath} directory stub exports ${exportNames(stub).join(', ')}`);
   }
-};
+}
 
+const { enforceLenient } = await import('@lifeomic/abac/enforce-lenient');
 const count = Number(process.env.ABAC_COMPAT_COUNT || 2000);
-const mismatches = generateInputs(DEFAULT_SEED, count).filter(
-  ({ policy, operation, attributes }) =>
-    isValid(policy) && enforceLenient(operation, policy, attributes) !== published.enforceLenient(operation, policy, attributes),
-);
+const mismatches = enforceLenientMismatches(published, enforceLenient, () => generateInputs(DEFAULT_SEED, count));
 if (mismatches.length > 0) {
   console.error(JSON.stringify(mismatches.slice(0, 3), null, 2));
   throw new Error(`${mismatches.length} enforce-lenient mismatches against 5.0.0`);
 }
 
-console.log(`node ${process.version}: every subpath loads through require and import, and enforce-lenient matches 5.0.0`);
+console.log(`node ${process.version}: every subpath loads through require, import, and its directory stub, and enforce-lenient matches 5.0.0`);

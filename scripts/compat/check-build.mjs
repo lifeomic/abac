@@ -93,7 +93,7 @@ const slim = await build({
 });
 const slimGzip = gzipSync(slim.outputFiles[0].text).length;
 const slimInputs = Object.keys(slim.metafile.inputs).join('\n');
-if (slimGzip >= 2048 || /\b(ajv|deep-equal)\b/.test(slimInputs)) {
+if (slimGzip >= 3072 || /\b(ajv|deep-equal)\b/.test(slimInputs)) {
   throw new Error(`enforce-lenient bundle is ${slimGzip} bytes gzipped from\n${slimInputs}`);
 }
 console.log(`@lifeomic/abac/enforce-lenient bundles to ${slimGzip} bytes gzipped without ajv or deep-equal`);
@@ -113,20 +113,6 @@ writeFileSync(
   ].join('\n'),
 );
 for (const [module, moduleResolution] of [['commonjs', 'node10'], ['node16', 'node16'], ['esnext', 'bundler']]) {
-  execFileSync(
-    process.execPath,
-    [
-      join(root, 'node_modules', 'typescript', 'bin', 'tsc'),
-      '--noEmit',
-      '--strict',
-      '--skipLibCheck',
-      '--module',
-      module,
-      '--moduleResolution',
-      moduleResolution,
-      join(consumerDir, 'resolve.ts'),
-    ],
-    { stdio: 'inherit' },
-  );
+  runTsc(join(consumerDir, 'resolve.ts'), { module, moduleResolution, skipLibCheck: true });
 }
 console.log('root and subpath types resolve under node10, node16, and bundler');

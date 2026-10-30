@@ -54,7 +54,10 @@
   "files": [
     "src/**/*.js",
     "src/**/*.mjs",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "enforce-lenient/package.json",
+    "validate/package.json",
+    "types/package.json"
   ],
   "sideEffects": false,
   "author": "LifeOmic <development@lifeomic.com>",

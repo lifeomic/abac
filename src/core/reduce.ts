@@ -115,6 +115,9 @@ const reduceRule = (
   return result;
 };
 
+export const isPossible = (rules: AbacRule[] | boolean) =>
+  rules === true || (Array.isArray(rules) && rules.length > 0);
+
 export const reduceRules = (
   rules: AbacRule[] | boolean,
   attributes?: Record<string, any>,

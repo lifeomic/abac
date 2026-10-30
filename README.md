@@ -67,11 +67,16 @@ import { validate } from '@lifeomic/abac/validate';
 - `@lifeomic/abac/enforce-lenient` skips schema validation and never loads
   `ajv`. Use it only for policies a server already validated. It never throws,
   and returns `false` when `policy.rules` is not an object. For a valid policy it
-  returns what `enforceLenient` from `@lifeomic/abac` returns. It is under 2 KB
-  minified and gzipped.
+  returns what `enforceLenient` from `@lifeomic/abac` returns, except for
+  operation names inherited from `Object.prototype` such as `toString`, where
+  the root import throws a `TypeError` and this returns `false`. It is under
+  3 KB minified and gzipped.
 - `@lifeomic/abac/validate` exports `validate` with the same errors as the root
   import, using your installed `ajv`.
 - `@lifeomic/abac/types` exports the policy types and no runtime code.
+
+Each subpath also has a directory with a `package.json`, so tools that ignore
+`exports`, such as older Jest and Metro, still resolve it.
 
 ## Development
 

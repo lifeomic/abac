@@ -1,12 +1,20 @@
 import type { AbacPolicy, AbacReduceOptions, AbacRule } from './schemas';
 import { isPathPrefix } from './core/attributes';
 import { allows, mightAllow } from './core/enforce';
-import { reduceRules } from './core/reduce';
+import { isPossible, reduceRules } from './core/reduce';
 import { validate, validateJsonSchema } from './validation';
 
-export type * from './schemas';
+export type * from './types';
 export { COMPARISON_REVERSION_MAP } from './core/reduce';
 export { validate } from './validation';
+
+const isValid = (policy: AbacPolicy) => {
+  try {
+    return validate(policy);
+  } catch (error) {
+    return false;
+  }
+};
 
 /**
  * Merge multiple policies into a single policy with the same effect.
@@ -86,7 +94,7 @@ export const reduce = (
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     const newRules = reduceRules(rules, attributes, options.inlineTargets);
 
-    if (newRules === true || (Array.isArray(newRules) && newRules.length > 0)) {
+    if (isPossible(newRules)) {
       result[operation] = newRules;
     }
   });
@@ -107,16 +115,8 @@ export const enforce = (
   operationName: string,
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-): boolean => {
-  try {
-    // Before using the policy, make sure it's valid
-    validate(policy);
-  } catch (error) {
-    return false;
-  }
-
-  return allows(operationName, policy, attributes);
-};
+): boolean =>
+  isValid(policy) && allows(operationName, policy, attributes);
 
 /**
  * Performs a check for whether the given policy might
@@ -137,16 +137,8 @@ export const enforceLenient = (
   operationName: string,
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-): boolean => {
-  try {
-    // Before using the policy, make sure it's valid
-    validate(policy);
-  } catch (error) {
-    return false;
-  }
-
-  return mightAllow(operationName, policy, attributes);
-};
+): boolean =>
+  isValid(policy) && mightAllow(operationName, policy, attributes);
 
 /**
  * Check whether the given policy allows one of a list of operations

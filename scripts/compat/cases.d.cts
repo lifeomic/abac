@@ -20,6 +20,11 @@ export function compareImplementations(
   makeInputs: () => Input[],
   label: string,
 ): Mismatch[];
+export function enforceLenientMismatches(
+  published: object,
+  enforceLenient: (operation: string, policy: AbacPolicy, attributes?: Record<string, unknown>) => boolean,
+  makeInputs: () => Input[],
+): Mismatch[];
 export function exportKinds(module: object): [string, string][];
 export function generateInputs(seed: number, count: number): Input[];
 export function loosePairInputs(): Input[];
