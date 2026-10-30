@@ -1,3 +1,4 @@
+import inspector from 'node:inspector';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
@@ -7,6 +8,8 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['test/**/*.test.ts'],
+    // While debugging, don't let breakpoints trip the timeout.
+    testTimeout: inspector.url() ? 1e8 : undefined,
     clearMocks: true,
     restoreMocks: true,
     mockReset: true,
