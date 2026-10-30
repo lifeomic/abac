@@ -24,12 +24,12 @@ const bundle = async (contents: string) => {
   };
 };
 
-test('enforce-lenient bundles to under 3 KB gzipped with only deep-clone', async () => {
+test('enforce-lenient bundles to under 3 KB gzipped with no dependencies', async () => {
   const { code, gzipBytes, packages } = await bundle(
     "import { enforceLenient } from './src/enforce-lenient'; export default enforceLenient;",
   );
 
-  expect(packages).toStrictEqual(['deep-clone']);
+  expect(packages).toStrictEqual([]);
   expect(code).not.toMatch(/new Function|\beval\(/);
   expect(gzipBytes).toBeLessThan(3072);
 });
@@ -46,4 +46,5 @@ test('the root entry still bundles validation', async () => {
 
   expect(packages).toContain('ajv');
   expect(packages).not.toContain('deep-equal');
+  expect(packages).not.toContain('deep-clone');
 });

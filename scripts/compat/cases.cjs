@@ -126,6 +126,25 @@ const loosePairs = () => [
   [foreign('new Set([1])'), foreign('new Set([1])')],
   [foreign('new Error("a")'), bag(new Error('a'))],
   [foreign('/a/g'), bag(/a/g)],
+  // Local exotic values: deep-clone turns each into a plain object of its own enumerable keys.
+  [new Set([1]), new Set([2])],
+  [new Map([[1, 1]]), {}],
+  [new Uint8Array([1]), { 0: 1 }],
+  [new Uint8Array([1]), new Uint8Array([2])],
+  [Buffer.from([1]), [1]],
+  [new Number(1), new Number(2)],
+  [Object.assign(() => 1, { a: 1 }), { a: 1 }],
+  [/a/g, /b/i],
+  [new Error('a'), new Error('b')],
+  [Object.defineProperty({}, 'a', { enumerable: true, get: () => 1 }), { a: 1 }],
+  [Object.defineProperty({ b: 1 }, 'a', { enumerable: false, value: 1 }), { b: 1 }],
+  [JSON.parse('{"__proto__": {"a": 1}}'), {}],
+  [JSON.parse('{"__proto__": {"a": 1}}'), JSON.parse('{"__proto__": {"a": 2}}')],
+  [new Proxy({ a: 1 }, {}), { a: 1 }],
+  [new Proxy([1], {}), [1]],
+  [foreign('[1, 2]').value, [1, 2]],
+  [foreign('[1, 2]').value, [1, '2']],
+  [Object.assign([1], { extra: 1 }), [1]],
 ];
 
 const mulberry32 = (seed) => {

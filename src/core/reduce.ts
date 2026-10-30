@@ -1,7 +1,6 @@
-import deepClone from 'deep-clone';
-
 import type { AbacComparison, AbacRule } from '../schemas';
 import { getAttribute, getAttributeValues, isPathPrefix } from './attributes';
+import { deepClone } from './clone';
 import { compare } from './compare';
 
 export const COMPARISON_REVERSION_MAP = {

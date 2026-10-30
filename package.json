@@ -63,9 +63,7 @@
     "test": "vitest run",
     "compat:check": "node scripts/compat/check-build.mjs"
   },
-  "dependencies": {
-    "deep-clone": "^3.0.3"
-  },
+  "packageManager": "pnpm@12.15.0",
   "devDependencies": {
     "@lifeomic/eslint-config-standards": "3.1.0",
     "@lifeomic/typescript-config": "^4.0.0",
@@ -77,6 +75,7 @@
     "ajv": "^8.20.0",
     "browserslist": "^4.29.5",
     "conventional-changelog-conventionalcommits": "^5.0.0",
+    "deep-clone": "3.0.3",
     "deep-equal": "2.2.3",
     "esbuild": "~0.28.2",
     "esbuild-plugin-browserslist": "^4.0.0",
@@ -96,6 +95,5 @@
   },
   "publishConfig": {
     "access": "public"
-  },
-  "packageManager": "pnpm@12.15.0"
+  }
 }

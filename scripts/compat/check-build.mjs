@@ -93,10 +93,10 @@ const slim = await build({
 });
 const slimGzip = gzipSync(slim.outputFiles[0].text).length;
 const slimInputs = Object.keys(slim.metafile.inputs).join('\n');
-if (slimGzip >= 3072 || /\b(ajv|deep-equal)\b/.test(slimInputs)) {
+if (slimGzip >= 3072 || /\b(ajv|deep-equal|deep-clone)\b/.test(slimInputs)) {
   throw new Error(`enforce-lenient bundle is ${slimGzip} bytes gzipped from\n${slimInputs}`);
 }
-console.log(`@lifeomic/abac/enforce-lenient bundles to ${slimGzip} bytes gzipped without ajv or deep-equal`);
+console.log(`@lifeomic/abac/enforce-lenient bundles to ${slimGzip} bytes gzipped with no dependencies`);
 
 writeFileSync(
   join(consumerDir, 'resolve.ts'),
