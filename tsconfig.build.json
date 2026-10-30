@@ -3,8 +3,8 @@
   "compilerOptions": {
     "types": ["node"],
     "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true
   },
-  "include": [
-    "./src/**/*.ts",
-  ]
+  "include": ["./src/**/*.ts"]
 }

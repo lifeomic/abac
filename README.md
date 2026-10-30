@@ -59,6 +59,10 @@ Use the Node version in `.nvmrc`. The build runs `esbuild.config.mts`
 directly with Node, which needs Node 22.18 or later; the published package
 still supports Node 14.
 
+TypeScript 7 typechecks (`pnpm run typecheck`), while TypeScript 5.9 emits
+the declarations and backs eslint. Both install a `tsc` binary and
+`pnpm exec tsc` runs 7, so use the package scripts.
+
 ```bash
 pnpm install
 pnpm test
