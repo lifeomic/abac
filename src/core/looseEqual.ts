@@ -16,6 +16,9 @@ const boxedKind = (value: unknown) => {
   if (value === null || (typeof value !== 'object' && typeof value !== 'function')) {
     return null;
   }
+  if (Array.isArray(value)) {
+    return undefined;
+  }
   for (const [kind, valueOf] of BOXED_BRANDS) {
     try {
       valueOf(value);
@@ -136,7 +139,7 @@ const mapMightHaveLooseKey = (
   if ((typeof other === 'undefined' && !b.has(alternative)) || !equal(item, other, channel)) {
     return false;
   }
-  return !a.has(alternative) && equal(item, other, channel);
+  return !a.has(alternative);
 };
 
 const mapsEqual = (a: Map<unknown, unknown>, b: Map<unknown, unknown>, channel: Channel) => {
