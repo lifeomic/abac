@@ -1,13 +1,14 @@
 import AjvModule from 'ajv';
 
-import * as schemas from './schemas';
+import { Comparison, OperationNames, Policy, ReduceOptions, Rule, Rules } from './schemas';
 import type { AbacPolicy } from './schemas';
 
 // ajv 7 sets only `exports.default`, so a Node ESM default import gets the exports object.
 const Ajv = (AjvModule as unknown as { default?: typeof AjvModule }).default ?? AjvModule;
 
+// Not `Object.values` of a namespace import: bundler interop can add a `default` entry holding every schema.
 const ajv = new Ajv({
-  schemas: Object.values(schemas),
+  schemas: [Comparison, Policy, Rule, Rules, OperationNames, ReduceOptions],
 });
 
 /**

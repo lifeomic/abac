@@ -98,6 +98,26 @@ if (slimGzip >= 3072 || /\b(ajv|deep-equal)\b/.test(slimInputs)) {
 }
 console.log(`@lifeomic/abac/enforce-lenient bundles to ${slimGzip} bytes gzipped without ajv or deep-equal`);
 
+// https://github.com/lifeomic/abac/issues/88: esbuild's node-mode CommonJS interop made 5.0.0 throw on load.
+for (const platform of ['node', 'browser']) {
+  for (const format of ['cjs', 'esm']) {
+    const outfile = join(consumerDir, `bundled-${platform}.${format === 'esm' ? 'mjs' : 'cjs'}`);
+    await build({
+      stdin: {
+        contents: 'import { enforceAny } from "@lifeomic/abac"; if (enforceAny(["readData"], { rules: { readData: true } }) !== "readData") throw new Error("wrong result");',
+        resolveDir: consumerDir,
+      },
+      bundle: true,
+      format,
+      platform,
+      outfile,
+      logLevel: 'silent',
+    });
+    execFileSync(process.execPath, [outfile], { stdio: ['ignore', 'ignore', 'inherit'] });
+  }
+}
+console.log('bundles for node and browser, as cjs and esm, run enforceAny');
+
 writeFileSync(
   join(consumerDir, 'resolve.ts'),
   [
