@@ -4,6 +4,8 @@ const vm = require('vm');
 
 const OPERATIONS = ['readData', 'writeData', 'deleteData', 'accessAdmin'];
 
+const INHERITED_OPERATIONS = ['toString', 'constructor'];
+
 const COMPARISONS = [
   'equals',
   'notEquals',
@@ -33,6 +35,7 @@ const PATHS = [
   'user.%keys',
   'resource.%%keys',
   '*.id',
+  '__proto__',
 ];
 
 const STRINGS = ['abc', 'ab', 'bc', 'a', '', '1', '0', 'project'];
@@ -290,9 +293,9 @@ const createGenerator = (seed) => {
       const defined = currentPolicy && currentPolicy.rules && typeof currentPolicy.rules === 'object'
         ? Object.keys(currentPolicy.rules)
         : [];
-      return defined.length > 0 && chance(0.8) ? pick(defined) : pick(OPERATIONS.concat(['unknownOperation']));
+      return defined.length > 0 && chance(0.8) ? pick(defined) : pick(OPERATIONS.concat(['unknownOperation'], INHERITED_OPERATIONS));
     },
-    operations: () => Array.from({ length: int(0, 3) }, () => pick(OPERATIONS)),
+    operations: () => Array.from({ length: int(0, 3) }, () => pick(OPERATIONS.concat(INHERITED_OPERATIONS))),
     path: () => pick(PATHS.concat(['user', 'resource', 'nothing'])),
   };
 };
@@ -301,7 +304,8 @@ const capture = (fn) => {
   try {
     return { value: fn() };
   } catch (error) {
-    return { error: error && error.message };
+    // V8 builds TypeError messages from the compiled call site, so source and build differ in text.
+    return { error: error instanceof TypeError ? 'TypeError' : error && error.message };
   }
 };
 

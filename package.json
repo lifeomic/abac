@@ -41,7 +41,7 @@
     "clean": "./clean.sh",
     "build": "node esbuild.config.mts && node node_modules/typescript/bin/tsc --project tsconfig.build.json",
     "prepublishOnly": "pnpm run build",
-    "lint": "eslint src test",
+    "lint": "eslint --ext .ts,.cjs,.mjs src test scripts",
     "typecheck": "node node_modules/typescript7/bin/tsc --noEmit --project tsconfig.json",
     "pretest": "pnpm run lint && pnpm run typecheck",
     "test": "vitest run",
