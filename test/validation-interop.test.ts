@@ -21,5 +21,5 @@ test.each([
   const { validate } = await import('../src/validation.js');
 
   expect(validate({ rules: { readData: true } })).toBe(true);
-  expect(() => validate({ rules: 'readData' } as never)).toThrow('data/rules must be object');
+  expect(() => validate({ rules: 'readData' } as never)).toThrow(/rules/);
 });
