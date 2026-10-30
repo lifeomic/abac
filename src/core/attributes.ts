@@ -63,3 +63,23 @@ export const getAttribute = (
   const name = path.split('.');
   return getAttributeValues(attributes, name)[0];
 };
+
+/**
+ * Return true iff left is a path prefix of right
+ */
+export const isPathPrefix = (left: string, right: string) => {
+  const lhs = left.split('.');
+  const rhs = right.split('.');
+
+  if (lhs.length > rhs.length) {
+    return false;
+  }
+
+  for (let i = 0; i < lhs.length; ++i) {
+    if (lhs[i] !== rhs[i]) {
+      return false;
+    }
+  }
+
+  return true;
+};

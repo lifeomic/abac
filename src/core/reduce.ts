@@ -1,7 +1,7 @@
 import deepClone from 'deep-clone';
 
 import type { AbacComparison, AbacRule } from '../schemas';
-import { getAttribute, getAttributeValues } from './attributes';
+import { getAttribute, getAttributeValues, isPathPrefix } from './attributes';
 import { compare } from './compare';
 
 export const COMPARISON_REVERSION_MAP = {
@@ -59,13 +59,6 @@ const maybeReverseCondition = (
   return noOp;
 };
 
-const isSubpath = (compare: string, subject: string) => {
-  const subpaths = subject.split('.');
-  const superpathPortion = compare.split('.').slice(0, subpaths.length);
-
-  return subject === superpathPortion.join('.');
-};
-
 const reduceRule = (
   rule: AbacRule,
   attributes?: Record<string, any>,
@@ -86,7 +79,7 @@ const reduceRule = (
       condition?.target &&
       inlineTargets &&
       inlineTargets.some((inlineTarget) =>
-        isSubpath(condition.target as string, inlineTarget),
+        isPathPrefix(inlineTarget, condition.target as string),
       )
     ) {
       const inLineTargetValue = getAttribute(attributes, condition.target as string);

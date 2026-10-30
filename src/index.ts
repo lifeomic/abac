@@ -1,4 +1,5 @@
 import type { AbacPolicy, AbacReduceOptions, AbacRule } from './schemas';
+import { isPathPrefix } from './core/attributes';
 import { reduceRules } from './core/reduce';
 import { validate, validateJsonSchema } from './validation';
 
@@ -215,26 +216,6 @@ export const privilegesLenient = (
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules).map(([privilege]) => privilege);
-};
-
-/**
- * Return true iff left is a path prefix of right
- */
-const isPathPrefix = (left: string, right: string) => {
-  const lhs = left.split('.');
-  const rhs = right.split('.');
-
-  if (lhs.length > rhs.length) {
-    return false;
-  }
-
-  for (let i = 0; i < lhs.length; ++i) {
-    if (lhs[i] !== rhs[i]) {
-      return false;
-    }
-  }
-
-  return true;
 };
 
 /**
