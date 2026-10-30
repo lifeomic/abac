@@ -409,7 +409,9 @@ const compareImplementations = (expected, actual, makeInputs, label) => {
   return mismatches;
 };
 
-// Valid policies must match 5.0.0's enforceLenient; invalid ones only need a boolean.
+// Valid policies must match 5.0.0's enforceLenient, except that where 5.0.0 throws
+// (operation names inherited from Object.prototype) the slim entry returns false.
+// Invalid policies only need a boolean.
 const enforceLenientMismatches = (published, enforceLenient, makeInputs) => {
   const isValid = (policy) => {
     try {
@@ -419,12 +421,13 @@ const enforceLenientMismatches = (published, enforceLenient, makeInputs) => {
     }
   };
   const expected = makeInputs().map(({ policy, operation, attributes }) =>
-    isValid(policy) ? published.enforceLenient(operation, policy, attributes) : 'invalid',
+    isValid(policy) ? capture(() => published.enforceLenient(operation, policy, attributes)) : 'invalid',
   );
   return makeInputs().flatMap(({ policy, operation, attributes }, index) => {
     const actual = enforceLenient(operation, policy, attributes);
-    const matches = expected[index] === 'invalid' ? typeof actual === 'boolean' : actual === expected[index];
-    return matches ? [] : [{ index, policy, operation, attributes, expected: expected[index], actual }];
+    const want = expected[index] === 'invalid' ? 'invalid' : 'error' in expected[index] ? false : expected[index].value;
+    const matches = want === 'invalid' ? typeof actual === 'boolean' : actual === want;
+    return matches ? [] : [{ index, policy, operation, attributes, expected: want, actual }];
   });
 };
 

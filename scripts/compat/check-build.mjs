@@ -103,12 +103,11 @@ writeFileSync(
   [
     "import { enforce, validate as rootValidate, type AbacPolicy as RootPolicy } from '@lifeomic/abac';",
     "import { enforceLenient } from '@lifeomic/abac/enforce-lenient';",
-    "import { validate } from '@lifeomic/abac/validate';",
     "import type { AbacPolicy, AbacRule, AbacComparison } from '@lifeomic/abac/types';",
     'const policy: AbacPolicy = { rules: { readData: true } };',
     'const rule: AbacRule | AbacComparison | undefined = undefined;',
     'const same: RootPolicy = policy;',
-    'export const results = [enforce("readData", same), enforceLenient("readData", policy), validate(policy), rootValidate(policy), rule];',
+    'export const results = [enforce("readData", same), enforceLenient("readData", policy), rootValidate(policy), rule];',
     '',
   ].join('\n'),
 );

@@ -8,7 +8,6 @@ const published = require('abac-published');
 const expected = {
   '@lifeomic/abac': Object.keys(published),
   '@lifeomic/abac/enforce-lenient': ['enforceLenient'],
-  '@lifeomic/abac/validate': ['validate'],
   '@lifeomic/abac/types': [],
 };
 
@@ -24,7 +23,7 @@ for (const [specifier, names] of Object.entries(expected)) {
 }
 
 const packageDir = join(dirname(require.resolve('@lifeomic/abac')), '..');
-for (const subpath of ['enforce-lenient', 'validate', 'types']) {
+for (const subpath of ['enforce-lenient', 'types']) {
   const stub = require(join(packageDir, subpath));
   if (JSON.stringify(exportNames(stub)) !== JSON.stringify(exportNames(require(`@lifeomic/abac/${subpath}`)))) {
     throw new Error(`the ${subpath} directory stub exports ${exportNames(stub).join(', ')}`);

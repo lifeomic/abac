@@ -1,6 +1,11 @@
 import type { AbacPolicy } from './schemas';
 import { mightAllow } from './core/enforce';
 
+const hasRuleMap = (policy: AbacPolicy) => {
+  const rules: unknown = policy?.rules;
+  return rules !== null && typeof rules === 'object' && !Array.isArray(rules);
+};
+
 /**
  * Performs a check for whether the given policy might allow the operation,
  * without validating the policy. Use it only for policies a server already
@@ -9,8 +14,8 @@ import { mightAllow } from './core/enforce';
  * For a valid policy this returns what `enforceLenient` from `@lifeomic/abac`
  * returns, except for operation names inherited from `Object.prototype` such
  * as `toString`, where the root export throws a TypeError and this returns
- * false. If a rule has not been completely reduced for the
- * operation it assumes `true`, so it is not safe for server-side enforcement.
+ * false. If a rule has not been completely reduced for the operation it
+ * assumes `true`, so it is not safe for server-side enforcement.
  *
  * @param {string} operationName the requested operation
  * @param {AbacPolicy} policy a policy that already passed `validate`
@@ -19,11 +24,6 @@ import { mightAllow } from './core/enforce';
  * It never throws, and returns false when `policy.rules` is not an object.
  * Other malformed policies get an unspecified boolean, so validate first.
  */
-const hasRuleMap = (policy: AbacPolicy) => {
-  const rules: unknown = policy?.rules;
-  return rules !== null && typeof rules === 'object' && !Array.isArray(rules);
-};
-
 export const enforceLenient = (
   operationName: string,
   policy: AbacPolicy,

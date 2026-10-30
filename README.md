@@ -61,7 +61,6 @@ do not need. These subpaths load only what they export:
 ```typescript
 import type { AbacPolicy } from '@lifeomic/abac/types';
 import { enforceLenient } from '@lifeomic/abac/enforce-lenient';
-import { validate } from '@lifeomic/abac/validate';
 ```
 
 - `@lifeomic/abac/enforce-lenient` skips schema validation and never loads
@@ -71,8 +70,6 @@ import { validate } from '@lifeomic/abac/validate';
   operation names inherited from `Object.prototype` such as `toString`, where
   the root import throws a `TypeError` and this returns `false`. It is under
   3 KB minified and gzipped.
-- `@lifeomic/abac/validate` exports `validate` with the same errors as the root
-  import, using your installed `ajv`.
 - `@lifeomic/abac/types` exports the policy types and no runtime code.
 
 Each subpath also has a directory with a `package.json`, so tools that ignore

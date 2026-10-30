@@ -27,11 +27,6 @@
       "import": "./src/enforce-lenient.mjs",
       "require": "./src/enforce-lenient.js"
     },
-    "./validate": {
-      "types": "./src/validate.d.ts",
-      "import": "./src/validate.mjs",
-      "require": "./src/validate.js"
-    },
     "./types": {
       "types": "./src/types.d.ts",
       "import": "./src/types.mjs",
@@ -45,9 +40,6 @@
       ],
       "enforce-lenient": [
         "./src/enforce-lenient.d.ts"
-      ],
-      "validate": [
-        "./src/validate.d.ts"
       ]
     }
   },
@@ -56,7 +48,6 @@
     "src/**/*.mjs",
     "src/**/*.d.ts",
     "enforce-lenient/package.json",
-    "validate/package.json",
     "types/package.json"
   ],
   "sideEffects": false,

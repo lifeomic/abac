@@ -1,5 +1,0 @@
-{
-  "private": true,
-  "main": "../src/validate.js",
-  "types": "../src/validate.d.ts"
-}
