@@ -1,0 +1,3 @@
+src/**/*.js
+src/**/*.mjs
+src/**/*.d.ts

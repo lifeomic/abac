@@ -1,102 +1,20 @@
-import * as schemas from './schemas';
-import Ajv from 'ajv';
-import deepEqual from 'deep-equal';
-import deepClone from 'deep-clone';
-import type { AbacComparison, AbacPolicy, AbacRule, AbacReduceOptions } from './schemas';
-export type * from './schemas';
+import type { AbacPolicy, AbacReduceOptions, AbacRule } from './schemas';
+import { isPathPrefix } from './core/attributes';
+import { allows, mightAllow } from './core/enforce';
+import { isPossible, reduceRules } from './core/reduce';
+import { validate, validateJsonSchema } from './validation';
 
-const ajv = new Ajv({
-  schemas: Object.values(schemas),
-});
+export type * from './types';
+export { COMPARISON_REVERSION_MAP } from './core/reduce';
+export { validate } from './validation';
 
-export const COMPARISON_REVERSION_MAP = {
-  endsWith: 'suffixOf',
-  equals: 'equals',
-  in: 'includes',
-  includes: 'in',
-  notEquals: 'notEquals',
-  notIn: 'notIncludes',
-  notIncludes: 'notIn',
-  prefixOf: 'startsWith',
-  startsWith: 'prefixOf',
-  subset: 'superset',
-  suffixOf: 'endsWith',
-  superset: 'subset',
-} as const;
-
-const TARGETLESS_COMPARISON_OPERATORS = ['exists'];
-
-const isString = (value: any): value is string =>
-  typeof value === 'string' || value instanceof String;
-
-// We reverse conditions when we have a known "key" value and an unknown
-// "target" value.
-const maybeReverseCondition = (
-  pathToCheck: string,
-  condition: AbacComparison,
-  attributes?: Record<string, any>,
-): { condition: AbacComparison; pathToCheck: string; } => {
-  const noOp = {
-    pathToCheck,
-    condition,
-  };
-
-  if (
-    !condition?.target ||
-    TARGETLESS_COMPARISON_OPERATORS.includes(condition.comparison as string)
-  ) {
-    return noOp;
+const isValid = (policy: AbacPolicy) => {
+  try {
+    return validate(policy);
+  } catch (error) {
+    return false;
   }
-
-  const originalPathToCheckValue = getAttribute(attributes, pathToCheck);
-  const originalTargetValue = getAttribute(attributes, condition.target as string);
-
-  if (
-    originalPathToCheckValue !== undefined &&
-    originalTargetValue === undefined
-  ) {
-    return {
-      pathToCheck: condition.target,
-      condition: {
-        comparison: COMPARISON_REVERSION_MAP[condition.comparison as any as keyof typeof COMPARISON_REVERSION_MAP],
-        target: pathToCheck,
-      },
-    };
-  }
-
-  return noOp;
 };
-
-/**
- * Validate value with AJV.
- *
- * @param {string} schemaName the name of the JSON schema to use for validation.
- * @param {AbacPolicy} policy the value to validate.
- * @returns {boolean} true if the value is valid based on specified schema.
- * @throws Error if the value is invalid based on the specified schema.
- */
-const validateJsonSchema = (
-  schemaName: string,
-  policy: Record<string, any>,
-): true => {
-  const valid = ajv.validate(schemaName, policy) as boolean;
-
-  if (!valid) {
-    throw new Error(ajv.errorsText());
-  }
-
-  return valid;
-};
-
-/**
- * Validate value with AJV, and the Policy schema.
- *
- * @param {AbacPolicy} policy the value to validate.
- * @returns {boolean} true if the value is valid based on specified schema.
- * @throws Error if the value is invalid based on the specified schema.
- */
-export const validate = (policy: AbacPolicy): true =>
-  validateJsonSchema('Policy', policy);
 
 /**
  * Merge multiple policies into a single policy with the same effect.
@@ -144,254 +62,6 @@ export const extract = (
 };
 
 /**
- * Get a list of all values matching the path (including wildcards).
- */
-const getAttributeValues = (
-  attributes: Record<string, any> | null | undefined,
-  path: string[],
-): any[] => {
-  if (attributes === undefined || attributes === null) {
-    return [];
-  }
-
-  if (path.length === 0) {
-    return [attributes];
-  }
-
-  const name = path[0];
-
-  switch (name) {
-    case '*':
-      const keys = Object.keys(attributes as Record<string, any>);
-      let values: Record<string, string>[] = [];
-
-      for (const key of keys) {
-        const result = getAttributeValues(
-          attributes[key] as Record<string, any>,
-          path.slice(1),
-        );
-
-        // If a single sub-path fails to evaluate fail the entire traversal.
-        if (result.length === 0) {
-          values = [];
-          break;
-        } else {
-          values = values.concat(result);
-        }
-      }
-
-      return values;
-    case '%keys':
-      return getAttributeValues(
-        Object.keys(attributes as Record<string, any>),
-        path.slice(1),
-      );
-    default:
-      const unescapedName = name.replace(/^%%/, '%');
-      return getAttributeValues(
-        attributes[unescapedName] as Record<string, any>,
-        path.slice(1),
-      );
-  }
-};
-
-/**
- * Get the attribute value identified by path.
- *
- * @param {object} attributes attributes as nested objects
- * @param {string} path string path (e.g. 'user.groups')
- */
-const getAttribute = (
-  attributes: Record<string, any> | undefined,
-  path: string,
-) => {
-  const name = path.split('.');
-  return getAttributeValues(attributes, name)[0];
-};
-
-const getCompareValue = (
-  condition: AbacComparison,
-  attributes?: Record<string, any>,
-) => {
-  if ('target' in condition) {
-    return getAttribute(attributes, condition.target as string);
-  }
-  return condition.value;
-};
-
-/**
- * @returns `true` if the comparison matches, `false` if there is a mismatch,
- *           and `undefined` if the target value is not known to compute the
- *           result.
- */
-const compare = (
-  condition: AbacComparison,
-  value?: any,
-  attributes?: Record<string, any>,
-): boolean | undefined => {
-  const compareValue = getCompareValue(condition, attributes);
-
-  // "exists" can have an undefined value.
-  if (compareValue === undefined && condition.comparison !== 'exists') {
-    return undefined;
-  }
-
-  switch (condition.comparison) {
-    case 'includes':
-      return Array.isArray(value) && value.includes(compareValue as string);
-
-    case 'in':
-      return (
-        Array.isArray(compareValue) && compareValue.includes(value as string)
-      );
-
-    case 'equals':
-      return deepEqual(value, compareValue);
-
-    case 'exists':
-      return value !== undefined;
-
-    case 'notEquals':
-      return !deepEqual(value, compareValue);
-
-    case 'notIn':
-      return (
-        Array.isArray(compareValue) && !compareValue.includes(value as string)
-      );
-
-    case 'notIncludes':
-      return Array.isArray(value) && !value.includes(compareValue as string);
-
-    case 'superset':
-      return (
-        Array.isArray(value) &&
-        Array.isArray(compareValue) &&
-        compareValue.every((x) => value.includes(x as string))
-      );
-
-    case 'subset':
-      return (
-        Array.isArray(value) &&
-        Array.isArray(compareValue) &&
-        value.every((x) => compareValue.includes(x))
-      );
-
-    case 'startsWith':
-      return isString(value) && value.startsWith(compareValue as string);
-
-    case 'prefixOf':
-      return (
-        isString(value) &&
-        isString(compareValue) &&
-        compareValue.startsWith(value)
-      );
-
-    case 'endsWith':
-      return isString(value) && value.endsWith(compareValue as string);
-
-    case 'suffixOf':
-      return (
-        isString(value) &&
-        isString(compareValue) &&
-        compareValue.endsWith(value)
-      );
-
-    default:
-      // for unknown comparison types simply deny access:
-      return false;
-  }
-};
-
-const isSubpath = (compare: string, subject: string) => {
-  const subpaths = subject.split('.');
-  const superpathPortion = compare.split('.').slice(0, subpaths.length);
-
-  return subject === superpathPortion.join('.');
-};
-
-const reduceRule = (
-  rule: AbacRule,
-  attributes?: Record<string, any>,
-  inlineTargets?: string[],
-): AbacRule | boolean => {
-  const result: AbacRule = {};
-
-  for (const [key, value] of Object.entries(deepClone(rule))) {
-    const { pathToCheck, condition } = maybeReverseCondition(
-      key,
-      value,
-      attributes,
-    );
-
-    // When we already know the value of the target, we replace it with an
-    // in-line value (if configured in inline targets).
-    if (
-      condition?.target &&
-      inlineTargets &&
-      inlineTargets.some((inlineTarget) =>
-        isSubpath(condition.target as string, inlineTarget),
-      )
-    ) {
-      const inLineTargetValue = getAttribute(attributes, condition.target as string);
-
-      if (inLineTargetValue) {
-        condition.value = inLineTargetValue;
-        delete condition.target;
-      }
-    }
-
-    const values = getAttributeValues(attributes, pathToCheck.split('.'));
-
-    if (values.length === 0) {
-      result[pathToCheck] = condition;
-    } else {
-      for (const value of values) {
-        const compareResult = compare(condition, value, attributes);
-
-        if (compareResult === undefined) {
-          result[pathToCheck] = condition;
-          break;
-        } else if (compareResult === false) {
-          return false;
-        }
-      }
-    }
-  }
-
-  if (Object.keys(result).length === 0) {
-    return true;
-  }
-
-  return result;
-};
-
-const reduceRules = (
-  rules: AbacRule[] | boolean,
-  attributes?: Record<string, any>,
-  inlineTargets?: string[],
-) => {
-  const attributesClone = deepClone(attributes);
-
-  const result: AbacRule[] = [];
-
-  if (rules === true || rules === false) {
-    return rules;
-  }
-
-  for (const rule of deepClone(rules)) {
-    const reducedRule = reduceRule(rule, attributesClone, inlineTargets);
-
-    if (reducedRule === true) {
-      return true;
-    } else if (reducedRule) {
-      result.push(reducedRule);
-    }
-  }
-
-  return result;
-};
-
-/**
  * Performs a synchronous reduction for whether the given policy might
  * allow the operations. This function's intended use is for client applications
  * that need a simple check to disable or annotate UI elements.
@@ -424,7 +94,7 @@ export const reduce = (
   Object.entries(policy.rules).forEach(([operation, rules]) => {
     const newRules = reduceRules(rules, attributes, options.inlineTargets);
 
-    if (newRules === true || (Array.isArray(newRules) && newRules.length > 0)) {
+    if (isPossible(newRules)) {
       result[operation] = newRules;
     }
   });
@@ -445,20 +115,8 @@ export const enforce = (
   operationName: string,
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-): boolean => {
-  try {
-    // Before using the policy, make sure it's valid
-    validate(policy);
-  } catch (error) {
-    return false;
-  }
-
-  const rules =
-    policy.rules && policy.rules[operationName]
-      ? policy.rules[operationName]
-      : [];
-  return reduceRules(rules, attributes) === true;
-};
+): boolean =>
+  isValid(policy) && allows(operationName, policy, attributes);
 
 /**
  * Performs a check for whether the given policy might
@@ -479,21 +137,8 @@ export const enforceLenient = (
   operationName: string,
   policy: AbacPolicy,
   attributes?: Record<string, any>,
-): boolean => {
-  try {
-    // Before using the policy, make sure it's valid
-    validate(policy);
-  } catch (error) {
-    return false;
-  }
-
-  const rules =
-    policy.rules && policy.rules[operationName]
-      ? policy.rules[operationName]
-      : [];
-  const reducedRules = reduceRules(rules, attributes);
-  return reducedRules && (reducedRules === true || reducedRules.length > 0);
-};
+): boolean =>
+  isValid(policy) && mightAllow(operationName, policy, attributes);
 
 /**
  * Check whether the given policy allows one of a list of operations
@@ -555,26 +200,6 @@ export const privilegesLenient = (
 ): string[] => {
   const rules = reduce(policy, attributes).rules;
   return Object.entries(rules).map(([privilege]) => privilege);
-};
-
-/**
- * Return true iff left is a path prefix of right
- */
-const isPathPrefix = (left: string, right: string) => {
-  const lhs = left.split('.');
-  const rhs = right.split('.');
-
-  if (lhs.length > rhs.length) {
-    return false;
-  }
-
-  for (let i = 0; i < lhs.length; ++i) {
-    if (lhs[i] !== rhs[i]) {
-      return false;
-    }
-  }
-
-  return true;
 };
 
 /**

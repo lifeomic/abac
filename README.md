@@ -8,7 +8,7 @@ This module is suitable for use in both UIs and backend node.js services.
 ## Installation
 
 ```bash
-yarn install @lifeomic/abac
+npm install @lifeomic/abac ajv
 ```
 
 ## Terminology
@@ -52,6 +52,44 @@ abac.policyRequiresAttribute(policy, attribute);
 ```
 
 See unit tests in `/test` folder - many good examples.
+
+### Smaller imports
+
+The root import validates every policy with `ajv`, which most browser bundles
+do not need. These subpaths load only what they export:
+
+```typescript
+import type { AbacPolicy } from '@lifeomic/abac/types';
+import { enforceLenient } from '@lifeomic/abac/enforce-lenient';
+```
+
+- `@lifeomic/abac/enforce-lenient` skips schema validation and never loads
+  `ajv`. Use it only for policies a server already validated. It never throws,
+  and returns `false` when `policy.rules` is not an object. For a valid policy it
+  returns what `enforceLenient` from `@lifeomic/abac` returns, except for
+  operation names inherited from `Object.prototype` such as `toString`, where
+  the root import throws a `TypeError` and this returns `false`. It is under
+  3 KB minified and gzipped.
+- `@lifeomic/abac/types` exports the policy types and no runtime code.
+
+Each subpath also has a directory with a `package.json`, so tools that ignore
+`exports`, such as older Jest and Metro, still resolve it.
+
+## Development
+
+Use the Node version in `.nvmrc`. The build runs `esbuild.config.mts`
+directly with Node, which needs Node 22.18 or later; the published package
+still supports Node 14.
+
+TypeScript 7 typechecks (`pnpm run typecheck`), while TypeScript 5.9 emits
+the declarations and backs eslint. Both install a `tsc` binary and
+`pnpm exec tsc` runs 7, so use the package scripts.
+
+```bash
+pnpm install
+pnpm test
+pnpm run build
+```
 
 ## Release process
 

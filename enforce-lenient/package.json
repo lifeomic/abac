@@ -1,0 +1,5 @@
+{
+  "private": true,
+  "main": "../src/enforce-lenient.js",
+  "types": "../src/enforce-lenient.d.ts"
+}

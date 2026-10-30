@@ -4,12 +4,22 @@
   ],
   "env": {
     "commonjs": true,
+    "es2022": true,
     "node": true,
     "jest": true
+  },
+  "settings": {
+    "jest": { "version": 29 }
   },
   "parserOptions": {
     "ecmaVersion": 2022
   },
+  "overrides": [
+    {
+      "files": ["*.mjs"],
+      "parserOptions": { "sourceType": "module" }
+    }
+  ],
   "rules": {
     "no-case-declarations": "off"
   }
