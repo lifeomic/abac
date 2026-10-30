@@ -6,6 +6,16 @@ import { dirname, join } from 'node:path';
 const root = join(import.meta.dirname, '..', '..');
 const require = createRequire(join(root, 'package.json'));
 const publishedDir = dirname(require.resolve('abac-published'));
+const { exportKinds } = require('./scripts/compat/cases.cjs');
+
+// Both typescript and typescript7 install a `tsc` bin; declarations are checked with 5.x.
+const TSC = join(root, 'node_modules', 'typescript', 'bin', 'tsc');
+const runTsc = (file, { module, moduleResolution, skipLibCheck = false }) =>
+  execFileSync(
+    process.execPath,
+    [TSC, '--noEmit', '--strict', ...(skipLibCheck ? ['--skipLibCheck'] : []), '--module', module, '--moduleResolution', moduleResolution, file],
+    { stdio: 'inherit' },
+  );
 
 const run = (env) =>
   execFileSync(process.execPath, [join(import.meta.dirname, 'smoke.cjs')], {
@@ -16,7 +26,7 @@ const run = (env) =>
 
 run({ ABAC_CANDIDATE: join(root, 'src', 'index.js') });
 
-const kinds = (module) => Object.keys(module).sort().map((key) => `${key}:${typeof module[key]}`).join(',');
+const kinds = (module) => JSON.stringify(exportKinds(module));
 const browser = await import(join(root, 'src', 'browser.js'));
 const publishedBrowser = await import(join(publishedDir, 'browser.js'));
 if (kinds(browser) !== kinds(publishedBrowser)) {
@@ -52,18 +62,5 @@ writeFileSync(
   ].join('\n'),
 );
 
-execFileSync(
-  process.execPath,
-  [
-    join(root, 'node_modules', 'typescript', 'bin', 'tsc'),
-    '--noEmit',
-    '--strict',
-    '--module',
-    'commonjs',
-    '--moduleResolution',
-    'node10',
-    join(workDir, 'check.ts'),
-  ],
-  { stdio: 'inherit' },
-);
+runTsc(join(workDir, 'check.ts'), { module: 'commonjs', moduleResolution: 'node10' });
 console.log('declarations are type-equivalent to 5.0.0');

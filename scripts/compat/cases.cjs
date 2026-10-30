@@ -1,5 +1,7 @@
 'use strict';
 
+const vm = require('vm');
+
 const OPERATIONS = ['readData', 'writeData', 'deleteData', 'accessAdmin'];
 
 const COMPARISONS = [
@@ -61,6 +63,10 @@ const nullPrototype = (entries) => Object.assign(Object.create(null), entries);
 // eslint-disable-next-line no-sparse-arrays
 const sparse = () => [, 1];
 
+// deep-clone copies only `instanceof Object` values, so these reach the comparison uncloned.
+const bag = (value) => nullPrototype({ value });
+const foreign = (source) => vm.runInNewContext(`({ value: ${source} })`);
+
 const loosePairs = () => [
   [1, '1'],
   [false, 0],
@@ -89,6 +95,34 @@ const loosePairs = () => [
   [{ a: [true] }, { a: ['1'] }],
   [{ b: 1, a: 2 }, { a: '2', b: '1' }],
   [{ a: 1 }, { a: 1, b: 2 }],
+  [bag(new Set([1])), bag(new Set([2]))],
+  [bag(new Set([1])), bag(new Set(['1']))],
+  [bag(new Set([1, '1'])), bag(new Set(['1', 1]))],
+  [bag(new Set([{ a: 1 }])), bag(new Set([{ a: '1' }]))],
+  [bag(new Set([{ a: 1 }])), bag(new Set([{ a: 2 }]))],
+  [bag(new Map([['a', 1]])), bag(new Map([['a', 2]]))],
+  [bag(new Map([['a', 1]])), bag(new Map([['a', '1']]))],
+  [bag(new Map([[1, 'x']])), bag(new Map([['1', 'x']]))],
+  [bag(new Map([[null, 1]])), bag(new Map([[undefined, 1]]))],
+  [bag(new Map([[{ k: 1 }, 1]])), bag(new Map([[{ k: '1' }, '1']]))],
+  [bag(/admin/), bag(/guest/)],
+  [bag(/a/g), bag(/a/i)],
+  [bag(/a/g), bag(/a/g)],
+  [bag(new Error('a')), bag(new Error('b'))],
+  [bag(new Error('a')), bag(new TypeError('a'))],
+  [bag(new Error('a')), bag(new Error('a'))],
+  [bag(new Uint8Array([1]).buffer), bag(new Uint8Array([2]).buffer)],
+  [bag(new Uint8Array([1]).buffer), bag(new Uint8Array([1]).buffer)],
+  [bag(Buffer.from([1])), bag(new Uint8Array([1]))],
+  [bag(Buffer.from([1])), bag(Buffer.from([2]))],
+  [bag(new Uint8Array([1])), bag(new Uint8Array([1]))],
+  [bag(new Uint8Array([1])), bag(new Int8Array([1]))],
+  [bag(new WeakMap()), bag(new WeakMap())],
+  [bag(() => 1), bag(() => 1)],
+  [foreign('new Set([1])'), bag(new Set([2]))],
+  [foreign('new Set([1])'), foreign('new Set([1])')],
+  [foreign('new Error("a")'), bag(new Error('a'))],
+  [foreign('/a/g'), bag(/a/g)],
 ];
 
 const mulberry32 = (seed) => {
@@ -307,38 +341,44 @@ const generateInputs = (seed, count) => {
 };
 
 const loosePairInputs = () => {
-  const inputs = [];
-  const pair = (index) => loosePairs()[index];
-  loosePairs().forEach((_, index) => {
-    for (const comparison of ['equals', 'notEquals']) {
-      inputs.push({
-        policy: { rules: { readData: [{ a: { comparison, value: pair(index)[1] } }] } },
-        otherPolicy: { rules: {} },
-        attributes: { a: pair(index)[0] },
-        operation: 'readData',
-        operations: ['readData'],
-        path: 'a',
-      });
-      inputs.push({
-        policy: { rules: { readData: [{ a: { comparison, target: 'b' } }] } },
-        otherPolicy: { rules: {} },
-        attributes: { a: pair(index)[0], b: pair(index)[1] },
-        operation: 'readData',
-        operations: ['readData'],
-        path: 'a',
-      });
-    }
+  const count = loosePairs().length;
+  const freshPair = (index) => loosePairs()[index];
+  const input = (policy, attributes) => ({
+    policy,
+    otherPolicy: { rules: {} },
+    attributes,
+    operation: 'readData',
+    operations: ['readData'],
+    path: 'a',
   });
-  return inputs;
+  return Array.from({ length: count }, (_, index) =>
+    ['equals', 'notEquals'].flatMap((comparison) => {
+      const [valueAttribute, value] = freshPair(index);
+      const [left, right] = freshPair(index);
+      return [
+        input({ rules: { readData: [{ a: { comparison, value } }] } }, { a: valueAttribute }),
+        input({ rules: { readData: [{ a: { comparison, target: 'b' } }] } }, { a: left, b: right }),
+      ];
+    }),
+  ).flat();
 };
+
+const tagOf = (value) => Object.prototype.toString.call(value).slice(8, -1);
 
 const normalize = (value) => {
   if (typeof value === 'number' && Number.isNaN(value)) return { $nan: true };
   if (value === undefined) return { $undefined: true };
-  if (value instanceof Date) return { $date: value.getTime() };
-  if (value instanceof Number || value instanceof String || value instanceof Boolean) {
-    return { $boxed: value.valueOf() };
-  }
+  if (typeof value === 'function') return { $function: value.toString() };
+  const tag = value && typeof value === 'object' ? tagOf(value) : undefined;
+  if (tag === 'Date') return { $date: value.getTime() };
+  if (tag === 'Number' || tag === 'String' || tag === 'Boolean') return { $boxed: value.valueOf() };
+  if (tag === 'RegExp') return { $regexp: String(value) };
+  if (tag === 'Error') return { $error: `${value.name}: ${value.message}` };
+  if (tag === 'Set') return { $set: Array.from(value, normalize) };
+  if (tag === 'Map') return { $map: Array.from(value, ([key, item]) => [normalize(key), normalize(item)]) };
+  if (tag === 'ArrayBuffer') return { $arrayBuffer: Array.from(new Uint8Array(value)) };
+  if (ArrayBuffer.isView(value)) return { [`$${Buffer.isBuffer(value) ? 'Buffer' : tag}`]: Array.from(value) };
+  if (tag === 'WeakMap') return { $weakMap: true };
   if (Array.isArray(value)) {
     return Array.from({ length: value.length }, (_, index) => (index in value ? normalize(value[index]) : { $hole: true }));
   }
@@ -365,6 +405,8 @@ const compareImplementations = (expected, actual, makeInputs, label) => {
   return mismatches;
 };
 
+const exportKinds = (module) => Object.keys(module).sort().map((key) => [key, typeof module[key]]);
+
 const DEFAULT_SEED = 0xabac;
 const DEFAULT_COUNT = 10000;
 
@@ -372,7 +414,9 @@ module.exports = {
   DEFAULT_COUNT,
   DEFAULT_SEED,
   compareImplementations,
+  exportKinds,
   generateInputs,
   loosePairInputs,
+  mulberry32,
   runCase,
 };
